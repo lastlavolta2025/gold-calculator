@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器 (GoldAPI.io 實時)</title>
+  <title>黃金買賣計算器 (含勞務費及信用卡費)</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 450px; margin: auto; padding: 20px; }
+    body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px; }
     h1, h2 { text-align: center; margin-bottom: 20px; }
     button {
       display: block;
@@ -24,6 +24,8 @@
     section { border: 1px solid #ccc; padding: 15px; margin-bottom: 25px; border-radius: 8px; }
     label, input { display: block; margin-bottom: 12px; width: 100%; font-size: 1.1em; }
     input[type=number] { padding: 8px; box-sizing: border-box; }
+    input[type=checkbox] { width: auto; margin-right: 6px; }
+    .checkbox-label { font-size: 1.05em; display: flex; align-items: center; }
     .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
     .profit-positive { color: green; }
     .profit-negative { color: red; }
@@ -81,6 +83,15 @@
     </label>
     <label>您的總出售價 (港幣):
       <input type="number" id="totalSellingPrice" value="0" min="0" step="any" />
+    </label>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="creditCardCharge" />
+      承擔信用卡費用 (3%)
+    </label>
+
+    <label>勞務費 (港幣):
+      <input type="number" id="labourCost" value="0" min="0" step="any" />
     </label>
 
     <div class="result" id="sellResult">正在載入價格...</div>
@@ -146,21 +157,30 @@
       `;
     }
 
-    // Sell Out Calculator Logic
+    // Sell Out Calculator Logic with Labour Cost & Credit Card Charge
     function calculateSell() {
       const goldPrice = parseFloat(document.getElementById('sellGoldPrice').value) || 0;
       const weight = parseFloat(document.getElementById('sellWeight').value) || 0;
       const purity = parseFloat(document.getElementById('sellPurity').value) || 0;
       const totalSellingPrice = parseFloat(document.getElementById('totalSellingPrice').value) || 0;
+      const labourCost = parseFloat(document.getElementById('labourCost').value) || 0;
+      const creditCardChargeChecked = document.getElementById('creditCardCharge').checked;
+      const creditCardFeeRate = 0.03; // 3%
 
       const pureWeight = weight * (purity / 100);
       const currentValue = pureWeight * goldPrice;
-      const profit = totalSellingPrice - currentValue;
+
+      let profit = totalSellingPrice - currentValue - labourCost;
+      if (creditCardChargeChecked) {
+        profit -= totalSellingPrice * creditCardFeeRate;
+      }
 
       document.getElementById('sellResult').innerHTML = `
         純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
         理論黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
         您的總出售價: 港幣 ${totalSellingPrice.toFixed(2)}<br/>
+        勞務費: 港幣 ${labourCost.toFixed(2)}<br/>
+        ${creditCardChargeChecked ? "承擔信用卡費用 (3%)<br/>" : ""}
         利潤: ${formatProfit(profit)}
       `;
     }
@@ -171,8 +191,11 @@
     });
 
     // Set event listeners for inputs on Sell Out calculator
-    ['sellWeight','sellPurity','totalSellingPrice'].forEach(id => {
+    ['sellWeight','sellPurity','totalSellingPrice','labourCost','creditCardCharge'].forEach(id => {
       document.getElementById(id).addEventListener('input', calculateSell);
+      if (id === 'creditCardCharge') {
+        document.getElementById(id).addEventListener('change', calculateSell);
+      }
     });
 
     // Fetch gold price from GoldAPI.io and convert to HK Tael
@@ -221,3 +244,4 @@
   </script>
 </body>
 </html>
+
