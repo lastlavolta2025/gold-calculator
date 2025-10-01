@@ -178,10 +178,14 @@
     // Fetch gold price from GoldAPI.io and update buy & sell calculators
     async function fetchGoldPrice() {
       const apiKey = "goldapi-fwpichsmg850yg2-io";  // Your API key
-      const url = `https://www.goldapi.io/api/XAU/HKD/latest`;
+      const url = 'https://www.goldapi.io/api/XAU/HKD';
+
       try {
         const response = await fetch(url, {
-          headers: { "x-access-token": apiKey }
+          method: 'GET',
+          headers: {
+            'x-access-token': apiKey
+          }
         });
         const data = await response.json();
 
@@ -214,6 +218,7 @@
   </script>
 </body>
 </html>
+
 
 
 
