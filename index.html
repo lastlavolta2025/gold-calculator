@@ -3,62 +3,185 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金計算器 (手機版)</title>
+  <title>黃金買賣計算器</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
-    label, input { display: block; margin-bottom: 15px; width: 100%; font-size: 1.1em; }
+    body { font-family: Arial, sans-serif; max-width: 450px; margin: auto; padding: 20px; }
+    h1, h2 { text-align: center; margin-bottom: 20px; }
+    button {
+      display: block;
+      width: 80%;
+      margin: 10px auto;
+      padding: 15px;
+      font-size: 1.2em;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid #007bff;
+      background-color: #007bff;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover { background-color: #0056b3; }
+    section { border: 1px solid #ccc; padding: 15px; margin-bottom: 25px; border-radius: 8px; }
+    label, input { display: block; margin-bottom: 12px; width: 100%; font-size: 1.1em; }
     input[type=number] { padding: 8px; box-sizing: border-box; }
-    h2 { text-align: center; }
-    .result { margin-top: 20px; font-weight: bold; font-size: 1.2em; }
+    .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
+    .profit-positive { color: green; }
+    .profit-negative { color: red; }
+    #backBtn {
+      margin-top: 10px;
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+    #backBtn:hover {
+      background-color: #5a6268;
+    }
   </style>
 </head>
 <body>
-  <h2>黃金購買計算器 (港幣 / 香港台兩)</h2>
-  <label>黃金價格 (港幣 / 香港台兩):
-    <input type="number" id="goldPrice" value="0" />
-  </label>
-  <label>重量 (香港台兩):
-    <input type="number" id="weight" value="1" min="0" step="any" />
-  </label>
-  <label>純度 (%):
-    <input type="number" id="purity" value="99.99" min="0" max="100" step="0.01" />
-  </label>
-  <label>您的總購買價 (港幣):
-    <input type="number" id="buyingPrice" value="0" min="0" step="any" />
-  </label>
 
-  <div class="result" id="result">請輸入價格</div>
+  <h1 id="pageHeader">黃金買賣計算器</h1>
+
+  <!-- Home screen -->
+  <div id="homeScreen">
+    <button id="btnBuyIn">買入計算器</button>
+    <button id="btnSellOut">賣出計算器</button>
+  </div>
+
+  <!-- Buy In Calculator -->
+  <section id="buySection" style="display:none;">
+    <h2>買入計算器</h2>
+    <label>黃金價格 (港幣 / 香港台兩):
+      <input type="number" id="buyGoldPrice" value="0" />
+    </label>
+    <label>重量 (香港台兩):
+      <input type="number" id="buyWeight" value="1" min="0" step="any" />
+    </label>
+    <label>純度 (%):
+      <input type="number" id="buyPurity" value="99.99" min="0" max="100" step="0.01" />
+    </label>
+    <label>您的總購買價 (港幣):
+      <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" />
+    </label>
+
+    <div class="result" id="buyResult">請輸入買入資料</div>
+    <button id="backBtnBuy" class="backBtn">返回主頁</button>
+  </section>
+
+  <!-- Sell Out Calculator -->
+  <section id="sellSection" style="display:none;">
+    <h2>賣出計算器</h2>
+    <label>黃金價格 (港幣 / 香港台兩):
+      <input type="number" id="sellGoldPrice" value="0" />
+    </label>
+    <label>重量 (香港台兩):
+      <input type="number" id="sellWeight" value="1" min="0" step="any" />
+    </label>
+    <label>純度 (%):
+      <input type="number" id="sellPurity" value="99.99" min="0" max="100" step="0.01" />
+    </label>
+    <label>您的總出售價 (港幣):
+      <input type="number" id="totalSellingPrice" value="0" min="0" step="any" />
+    </label>
+
+    <div class="result" id="sellResult">請輸入賣出資料</div>
+    <button id="backBtnSell" class="backBtn">返回主頁</button>
+  </section>
 
   <script>
-    function calculate() {
-      const goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
-      const weight = parseFloat(document.getElementById('weight').value) || 0;
-      const purity = parseFloat(document.getElementById('purity').value) || 0;
-      const totalBuyingPrice = parseFloat(document.getElementById('buyingPrice').value) || 0;
+    // Show/hide sections and update header
+    const homeScreen = document.getElementById('homeScreen');
+    const buySection = document.getElementById('buySection');
+    const sellSection = document.getElementById('sellSection');
+    const pageHeader = document.getElementById('pageHeader');
+
+    document.getElementById('btnBuyIn').addEventListener('click', () => {
+      homeScreen.style.display = 'none';
+      buySection.style.display = 'block';
+      sellSection.style.display = 'none';
+      pageHeader.textContent = '買入計算器';
+    });
+
+    document.getElementById('btnSellOut').addEventListener('click', () => {
+      homeScreen.style.display = 'none';
+      sellSection.style.display = 'block';
+      buySection.style.display = 'none';
+      pageHeader.textContent = '賣出計算器';
+    });
+
+    document.getElementById('backBtnBuy').addEventListener('click', () => {
+      buySection.style.display = 'none';
+      homeScreen.style.display = 'block';
+      pageHeader.textContent = '黃金買賣計算器';
+    });
+
+    document.getElementById('backBtnSell').addEventListener('click', () => {
+      sellSection.style.display = 'none';
+      homeScreen.style.display = 'block';
+      pageHeader.textContent = '黃金買賣計算器';
+    });
+
+    // Profit formatting helper
+    function formatProfit(profit) {
+      return profit >= 0
+        ? `<span class="profit-positive">港幣 ${profit.toFixed(2)} ✅</span>`
+        : `<span class="profit-negative">港幣 ${profit.toFixed(2)} ❌</span>`;
+    }
+
+    // Buy In Calculator Logic
+    function calculateBuy() {
+      const goldPrice = parseFloat(document.getElementById('buyGoldPrice').value) || 0;
+      const weight = parseFloat(document.getElementById('buyWeight').value) || 0;
+      const purity = parseFloat(document.getElementById('buyPurity').value) || 0;
+      const totalBuyingPrice = parseFloat(document.getElementById('totalBuyingPrice').value) || 0;
 
       const pureWeight = weight * (purity / 100);
       const currentValue = pureWeight * goldPrice;
       const profit = currentValue - totalBuyingPrice;
 
-      let profitSymbol = profit >= 0 ? '✅' : '❌';
-
-      document.getElementById('result').innerHTML = `
+      document.getElementById('buyResult').innerHTML = `
         純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
         當前黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
         您的總購買價: 港幣 ${totalBuyingPrice.toFixed(2)}<br/>
-        利潤: 港幣 ${profit.toFixed(2)} ${profitSymbol}
+        利潤: ${formatProfit(profit)}
       `;
     }
 
-    // 當輸入內容改變時重新計算
-    document.querySelectorAll('input').forEach(input => {
-      input.addEventListener('input', calculate);
+    // Sell Out Calculator Logic
+    function calculateSell() {
+      const goldPrice = parseFloat(document.getElementById('sellGoldPrice').value) || 0;
+      const weight = parseFloat(document.getElementById('sellWeight').value) || 0;
+      const purity = parseFloat(document.getElementById('sellPurity').value) || 0;
+      const totalSellingPrice = parseFloat(document.getElementById('totalSellingPrice').value) || 0;
+
+      const pureWeight = weight * (purity / 100);
+      const currentValue = pureWeight * goldPrice;
+      const profit = totalSellingPrice - currentValue;
+
+      document.getElementById('sellResult').innerHTML = `
+        純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
+        理論黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
+        您的總出售價: 港幣 ${totalSellingPrice.toFixed(2)}<br/>
+        利潤: ${formatProfit(profit)}
+      `;
+    }
+
+    // Set event listeners for inputs on Buy In calculator
+    ['buyGoldPrice','buyWeight','buyPurity','totalBuyingPrice'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateBuy);
     });
 
-    calculate();
+    // Set event listeners for inputs on Sell Out calculator
+    ['sellGoldPrice','sellWeight','sellPurity','totalSellingPrice'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateSell);
+    });
+
+    // Initial calculations (not visible at first)
+    calculateBuy();
+    calculateSell();
   </script>
 </body>
 </html>
+
 
 
 
