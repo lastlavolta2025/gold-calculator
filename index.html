@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器 (含勞務費及信用卡費)</title>
+  <title>黃金買賣計算器 (含人工費及信用卡費)</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px; }
     h1, h2 { text-align: center; margin-bottom: 20px; }
@@ -43,13 +43,11 @@
 
   <h1 id="pageHeader">黃金買賣計算器</h1>
 
-  <!-- Home screen -->
   <div id="homeScreen">
     <button id="btnBuyIn">買入計算器</button>
     <button id="btnSellOut">賣出計算器</button>
   </div>
 
-  <!-- Buy In Calculator -->
   <section id="buySection" style="display:none;">
     <h2>買入計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
@@ -69,7 +67,6 @@
     <button id="backBtnBuy" class="backBtn">返回主頁</button>
   </section>
 
-  <!-- Sell Out Calculator -->
   <section id="sellSection" style="display:none;">
     <h2>賣出計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
@@ -81,6 +78,9 @@
     <label>純度 (%):
       <input type="number" id="sellPurity" value="99.99" min="0" max="100" step="0.01" />
     </label>
+    <label>人工費 (港幣):
+      <input type="number" id="labourCost" value="0" min="0" step="any" />
+    </label>
     <label>您的總出售價 (港幣):
       <input type="number" id="totalSellingPrice" value="0" min="0" step="any" />
     </label>
@@ -90,16 +90,11 @@
       承擔信用卡費用 (3%)
     </label>
 
-    <label>勞務費 (港幣):
-      <input type="number" id="labourCost" value="0" min="0" step="any" />
-    </label>
-
     <div class="result" id="sellResult">正在載入價格...</div>
     <button id="backBtnSell" class="backBtn">返回主頁</button>
   </section>
 
   <script>
-    // Show/hide sections and update header
     const homeScreen = document.getElementById('homeScreen');
     const buySection = document.getElementById('buySection');
     const sellSection = document.getElementById('sellSection');
@@ -131,14 +126,12 @@
       pageHeader.textContent = '黃金買賣計算器';
     });
 
-    // Profit formatting helper
     function formatProfit(profit) {
       return profit >= 0
         ? `<span class="profit-positive">港幣 ${profit.toFixed(2)} ✅</span>`
         : `<span class="profit-negative">港幣 ${profit.toFixed(2)} ❌</span>`;
     }
 
-    // Buy In Calculator Logic
     function calculateBuy() {
       const goldPrice = parseFloat(document.getElementById('buyGoldPrice').value) || 0;
       const weight = parseFloat(document.getElementById('buyWeight').value) || 0;
@@ -157,7 +150,6 @@
       `;
     }
 
-    // Sell Out Calculator Logic with Labour Cost & Credit Card Charge
     function calculateSell() {
       const goldPrice = parseFloat(document.getElementById('sellGoldPrice').value) || 0;
       const weight = parseFloat(document.getElementById('sellWeight').value) || 0;
@@ -165,7 +157,7 @@
       const totalSellingPrice = parseFloat(document.getElementById('totalSellingPrice').value) || 0;
       const labourCost = parseFloat(document.getElementById('labourCost').value) || 0;
       const creditCardChargeChecked = document.getElementById('creditCardCharge').checked;
-      const creditCardFeeRate = 0.03; // 3%
+      const creditCardFeeRate = 0.03;
 
       const pureWeight = weight * (purity / 100);
       const currentValue = pureWeight * goldPrice;
@@ -179,26 +171,24 @@
         純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
         理論黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
         您的總出售價: 港幣 ${totalSellingPrice.toFixed(2)}<br/>
-        勞務費: 港幣 ${labourCost.toFixed(2)}<br/>
+        人工費: 港幣 ${labourCost.toFixed(2)}<br/>
         ${creditCardChargeChecked ? "承擔信用卡費用 (3%)<br/>" : ""}
         利潤: ${formatProfit(profit)}
       `;
     }
 
-    // Set event listeners for inputs on Buy In calculator
     ['buyWeight','buyPurity','totalBuyingPrice'].forEach(id => {
       document.getElementById(id).addEventListener('input', calculateBuy);
     });
 
-    // Set event listeners for inputs on Sell Out calculator
     ['sellWeight','sellPurity','totalSellingPrice','labourCost','creditCardCharge'].forEach(id => {
-      document.getElementById(id).addEventListener('input', calculateSell);
+      const el = document.getElementById(id);
+      el.addEventListener('input', calculateSell);
       if (id === 'creditCardCharge') {
-        document.getElementById(id).addEventListener('change', calculateSell);
+        el.addEventListener('change', calculateSell);
       }
     });
 
-    // Fetch gold price from GoldAPI.io and convert to HK Tael
     async function fetchGoldPrice() {
       const apiKey = "goldapi-fwpichsmg850yg2-io";
       const url = 'https://www.goldapi.io/api/XAU/HKD';
@@ -213,7 +203,6 @@
         const data = await response.json();
 
         if(data.price) {
-          // Convert price per troy ounce (31.1035g) to per HK Tael (37.429g)
           const pricePerTroyOunce = data.price;
           const pricePerHKTael = pricePerTroyOunce * (37.429 / 31.1035);
 
@@ -232,16 +221,12 @@
       }
     }
 
-    // Initial setup
     fetchGoldPrice();
-    setInterval(fetchGoldPrice, 600000); // Update every 10 minutes
+    setInterval(fetchGoldPrice, 600000);
 
-    // Show home screen initially
     homeScreen.style.display = 'block';
     buySection.style.display = 'none';
     sellSection.style.display = 'none';
-
   </script>
 </body>
 </html>
-
