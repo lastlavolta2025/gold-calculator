@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器</title>
+  <title>黃金買賣計算器 (GoldAPI.io 實時) </title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 450px; margin: auto; padding: 20px; }
     h1, h2 { text-align: center; margin-bottom: 20px; }
@@ -51,7 +51,7 @@
   <section id="buySection" style="display:none;">
     <h2>買入計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
-      <input type="number" id="buyGoldPrice" value="0" />
+      <input type="number" id="buyGoldPrice" value="0" readonly />
     </label>
     <label>重量 (香港台兩):
       <input type="number" id="buyWeight" value="1" min="0" step="any" />
@@ -63,7 +63,7 @@
       <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" />
     </label>
 
-    <div class="result" id="buyResult">請輸入買入資料</div>
+    <div class="result" id="buyResult">正在載入價格...</div>
     <button id="backBtnBuy" class="backBtn">返回主頁</button>
   </section>
 
@@ -71,7 +71,7 @@
   <section id="sellSection" style="display:none;">
     <h2>賣出計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
-      <input type="number" id="sellGoldPrice" value="0" />
+      <input type="number" id="sellGoldPrice" value="0" readonly />
     </label>
     <label>重量 (香港台兩):
       <input type="number" id="sellWeight" value="1" min="0" step="any" />
@@ -83,7 +83,7 @@
       <input type="number" id="totalSellingPrice" value="0" min="0" step="any" />
     </label>
 
-    <div class="result" id="sellResult">請輸入賣出資料</div>
+    <div class="result" id="sellResult">正在載入價格...</div>
     <button id="backBtnSell" class="backBtn">返回主頁</button>
   </section>
 
@@ -166,21 +166,55 @@
     }
 
     // Set event listeners for inputs on Buy In calculator
-    ['buyGoldPrice','buyWeight','buyPurity','totalBuyingPrice'].forEach(id => {
+    ['buyWeight','buyPurity','totalBuyingPrice'].forEach(id => {
       document.getElementById(id).addEventListener('input', calculateBuy);
     });
 
     // Set event listeners for inputs on Sell Out calculator
-    ['sellGoldPrice','sellWeight','sellPurity','totalSellingPrice'].forEach(id => {
+    ['sellWeight','sellPurity','totalSellingPrice'].forEach(id => {
       document.getElementById(id).addEventListener('input', calculateSell);
     });
 
-    // Initial calculations (not visible at first)
-    calculateBuy();
-    calculateSell();
+    // Fetch gold price from GoldAPI.io and update buy & sell calculators
+    async function fetchGoldPrice() {
+      const apiKey = "goldapi-fwpichsmg850yg2-io";  // Your API key
+      const url = `https://www.goldapi.io/api/XAU/HKD/latest`;
+      try {
+        const response = await fetch(url, {
+          headers: { "x-access-token": apiKey }
+        });
+        const data = await response.json();
+
+        if(data.price) {
+          // Update gold price fields
+          document.getElementById('buyGoldPrice').value = data.price.toFixed(2);
+          document.getElementById('sellGoldPrice').value = data.price.toFixed(2);
+
+          calculateBuy();
+          calculateSell();
+        } else {
+          document.getElementById('buyResult').textContent = '無法取得黃金價格';
+          document.getElementById('sellResult').textContent = '無法取得黃金價格';
+        }
+      } catch (error) {
+        document.getElementById('buyResult').textContent = '資料獲取錯誤: ' + error;
+        document.getElementById('sellResult').textContent = '資料獲取錯誤: ' + error;
+      }
+    }
+
+    // Initial setup
+    fetchGoldPrice();
+    setInterval(fetchGoldPrice, 600000); // Update every 10 minutes
+
+    // Show home screen initially
+    homeScreen.style.display = 'block';
+    buySection.style.display = 'none';
+    sellSection.style.display = 'none';
+
   </script>
 </body>
 </html>
+
 
 
 
