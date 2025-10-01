@@ -15,7 +15,7 @@
 <body>
   <h2>黃金購買計算器 (港幣 / 香港台兩)</h2>
   <label>黃金價格 (港幣 / 香港台兩):
-    <input type="number" id="goldPrice" value="0" readonly />
+    <input type="number" id="goldPrice" value="0" />
   </label>
   <label>重量 (香港台兩):
     <input type="number" id="weight" value="1" min="0" step="any" />
@@ -27,7 +27,7 @@
     <input type="number" id="buyingPrice" value="0" min="0" step="any" />
   </label>
 
-  <div class="result" id="result">正在載入價格...</div>
+  <div class="result" id="result">請輸入價格</div>
 
   <script>
     function calculate() {
@@ -50,46 +50,16 @@
       `;
     }
 
-    async function fetchGoldPrice() {
-      const apiKey = 'YOUR_API_KEY_HERE';  // 請替換成您在 Gold-API 申請的 API 金鑰
-      const url = `https://api.gold-api.com/price/XAU?api_key=${apiKey}`;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.success) {
-          // 金價：每盎司美元報價
-          const goldPriceUSD = data.price;
-
-          // 換算：美元盎司價轉港幣香港台兩價
-          // 1 美元 ≈ 7.8 港幣（約數）
-          // 1 香港台兩 = 1.20337 金衡盎司
-          const goldPriceHKD = goldPriceUSD * 7.8 * 1.20337;
-
-          document.getElementById('goldPrice').value = goldPriceHKD.toFixed(2);
-          calculate();
-        } else {
-          document.getElementById('result').innerHTML = 'API 錯誤: ' + (data.error || '未知錯誤');
-        }
-      } catch (error) {
-        document.getElementById('result').innerHTML = '資料獲取錯誤: ' + error;
-      }
-    }
-
     // 當輸入內容改變時重新計算
     document.querySelectorAll('input').forEach(input => {
-      if (input.id !== 'goldPrice') {
-        input.addEventListener('input', calculate);
-      }
+      input.addEventListener('input', calculate);
     });
 
-    // 頁面載入時抓取價格，每10分鐘更新一次
-    fetchGoldPrice();
-    setInterval(fetchGoldPrice, 600000);
+    calculate();
   </script>
 </body>
 </html>
+
 
 
 
