@@ -1,44 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Gold Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>黃金計算器 (手機版)</title>
   <style>
-    body { font-family: Arial; max-width: 400px; margin: auto; padding: 20px;}
-    label, input { display: block; margin-bottom: 10px; width: 100%; }
-    input[type=number] { padding: 5px; }
-    .result { margin-top: 20px; font-weight: bold; }
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
+    label, input { display: block; margin-bottom: 15px; width: 100%; font-size: 1.1em; }
+    input[type=number] { padding: 8px; box-sizing: border-box; }
+    h2 { text-align: center; }
+    .result { margin-top: 20px; font-weight: bold; font-size: 1.2em; }
   </style>
 </head>
 <body>
-  <h2>Gold Buying Calculator (HKD / Tael)</h2>
-  <label>Gold Price (HKD per Tael): <input type="number" id="goldPrice" value="170000"></label>
-  <label>Weight (Tael): <input type="number" id="weight" value="1"></label>
-  <label>Purity (%): <input type="number" id="purity" value="99.99"></label>
-  <label>Your Buying Price (HKD per Tael): <input type="number" id="buyingPrice" value="168000"></label>
+  <h2>黃金購買計算器 (港幣 / 香港台兩)</h2>
+  <label>黃金價格 (港幣 / 香港台兩): 
+    <input type="number" id="goldPrice" value="0" />
+  </label>
+  <label>重量 (香港台兩): 
+    <input type="number" id="weight" value="1" min="0" step="any" />
+  </label>
+  <label>純度 (%): 
+    <input type="number" id="purity" value="99.99" min="0" max="100" step="0.01" />
+  </label>
+  <label>您的購買價 (港幣 / 香港台兩): 
+    <input type="number" id="buyingPrice" value="0" min="0" step="any" />
+  </label>
 
-  <div class="result" id="result"></div>
+  <div class="result" id="result">請輸入價格</div>
 
   <script>
     function calculate() {
-      const price = parseFloat(document.getElementById('goldPrice').value);
-      const weight = parseFloat(document.getElementById('weight').value);
-      const purity = parseFloat(document.getElementById('purity').value);
-      const buyingPrice = parseFloat(document.getElementById('buyingPrice').value);
+      const price = parseFloat(document.getElementById('goldPrice').value) || 0;
+      const weight = parseFloat(document.getElementById('weight').value) || 0;
+      const purity = parseFloat(document.getElementById('purity').value) || 0;
+      const buyingPrice = parseFloat(document.getElementById('buyingPrice').value) || 0;
 
       const pureWeight = weight * (purity / 100);
       const currentValue = pureWeight * price;
-      const totalCost = weight * buyingPrice;
+      const totalCost = pureWeight * buyingPrice;
       const profit = currentValue - totalCost;
 
+      let profitSymbol = profit >= 0 ? '✅' : '❌';
+
       document.getElementById('result').innerHTML = `
-        Pure Gold Weight: ${pureWeight.toFixed(4)} Tael<br/>
-        Current Gold Value: HKD ${currentValue.toFixed(2)}<br/>
-        Total Cost: HKD ${totalCost.toFixed(2)}<br/>
-        Profit: HKD ${profit.toFixed(2)} ${profit >= 0 ? '✅' : '❌'}
+        純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
+        當前黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
+        總成本: 港幣 ${totalCost.toFixed(2)}<br/>
+        利潤: 港幣 ${profit.toFixed(2)} ${profitSymbol}
       `;
     }
 
+    // 當任何輸入框改變時重新計算
     document.querySelectorAll('input').forEach(input => {
       input.addEventListener('input', calculate);
     });
@@ -47,3 +60,4 @@
   </script>
 </body>
 </html>
+
