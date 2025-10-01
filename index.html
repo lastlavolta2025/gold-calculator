@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gold Calculator</title>
+  <style>
+    body { font-family: Arial; max-width: 400px; margin: auto; padding: 20px;}
+    label, input { display: block; margin-bottom: 10px; width: 100%; }
+    input[type=number] { padding: 5px; }
+    .result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Gold Buying Calculator (HKD / Tael)</h2>
+  <label>Gold Price (HKD per Tael): <input type="number" id="goldPrice" value="170000"></label>
+  <label>Weight (Tael): <input type="number" id="weight" value="1"></label>
+  <label>Purity (%): <input type="number" id="purity" value="99.99"></label>
+  <label>Your Buying Price (HKD per Tael): <input type="number" id="buyingPrice" value="168000"></label>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function calculate() {
+      const price = parseFloat(document.getElementById('goldPrice').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const purity = parseFloat(document.getElementById('purity').value);
+      const buyingPrice = parseFloat(document.getElementById('buyingPrice').value);
+
+      const pureWeight = weight * (purity / 100);
+      const currentValue = pureWeight * price;
+      const totalCost = weight * buyingPrice;
+      const profit = currentValue - totalCost;
+
+      document.getElementById('result').innerHTML = `
+        Pure Gold Weight: ${pureWeight.toFixed(4)} Tael<br/>
+        Current Gold Value: HKD ${currentValue.toFixed(2)}<br/>
+        Total Cost: HKD ${totalCost.toFixed(2)}<br/>
+        Profit: HKD ${profit.toFixed(2)} ${profit >= 0 ? '✅' : '❌'}
+      `;
+    }
+
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', calculate);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
