@@ -1,134 +1,159 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器 (含重置與售價模擬)</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px;}
-    h1, h2 {text-align: center; margin-bottom: 20px;}
-    .result {margin-top: 12px; font-weight: bold; font-size: 1.1em;}
-    .profit-positive {color: green;}
-    .profit-negative {color: red;}
-    .checkbox-label {font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px;}
-    input[type=number], input[type=text] {padding: 8px; box-sizing: border-box; font-size:1.1em;}
-    input[type=checkbox] {width: auto; margin-right: 6px;}
-    button.main-btn {
-      display: block;
-      width: 80%;
-      margin: 10px auto 20px auto;
-      padding: 15px;
-      font-size: 1.2em;
-      cursor: pointer;
-      border-radius: 8px;
-      border: 1px solid #007bff;
-      background-color: #007bff;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-    button.main-btn:hover {background-color: #0056b3;}
-    button.small-btn {
-      padding: 6px 12px;
-      font-size: 0.9em;
-      cursor: pointer;
-      border-radius: 6px;
-      border: 1px solid #6c757d;
-      background-color: #6c757d;
-      color: white;
-      transition: background-color 0.3s ease;
-      margin-left: 10px;
-    }
-    button.small-btn:hover {background-color: #5a6268;}
-    section {border: 1px solid #ccc; padding: 15px; margin-bottom: 30px; border-radius: 8px;}
-    label, input, span {display: block; margin-bottom: 8px; width: 100%;}
-    #adjustedBuyPriceDisplay, #chingfaiPriceDisplay, #totalSellingPriceDisplay {
-      font-size: 1em; color: #007bff; margin: 0 0 10px 0;
-    }
-    #backBtnBuy, #backBtnSell {
-      margin-top: 10px;
-      background-color: #6c757d;
-      border-color: #6c757d;
-    }
-    #backBtnBuy:hover, #backBtnSell:hover {
-      background-color: #5a6268;
-    }
-    .inline-flex {
-      display: flex;
-      align-items: center;
-    }
-    .inline-flex > label {
-      margin-right: 10px;
-      margin-bottom: 0;
-      white-space: nowrap;
-    }
-    .display-field {
-      border: 1px solid #ddd;
-      padding: 8px;
-      border-radius: 6px;
-      background-color: #f9f9f9;
-      font-size: 1.1em;
-      color: #333;
-      margin-top: 4px;
-      user-select: none;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>黃金買賣計算器（含重量千分之一台兩與純度選擇）</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px;}
+  h1, h2 { text-align: center; margin-bottom: 20px; }
+  .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
+  .profit-positive { color: green; }
+  .profit-negative { color: red; }
+  .checkbox-label { font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px; }
+  input[type=number], input[type=text] { padding: 8px; box-sizing: border-box; font-size: 1.1em; }
+  input[type=checkbox] { width: auto; margin-right: 6px; }
+  button.main-btn {
+    display: block;
+    width: 80%;
+    margin: 10px auto 20px auto;
+    padding: 15px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid #007bff;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  button.main-btn:hover { background-color: #0056b3; }
+  button.small-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #6c757d;
+    background-color: #6c757d;
+    color: white;
+    transition: background-color 0.3s ease;
+    margin-left: 10px;
+  }
+  button.small-btn:hover { background-color: #5a6268; }
+  section { border: 1px solid #ccc; padding: 15px; margin-bottom: 30px; border-radius: 8px; }
+  label, input, span { display: block; margin-bottom: 8px; width: 100%; }
+  #adjustedBuyPriceDisplay, #chingfaiPriceDisplay, #totalSellingPriceDisplay {
+    font-size: 1em; color: #007bff; margin: 0 0 10px 0;
+  }
+  #backBtnBuy, #backBtnSell {
+    margin-top: 10px;
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+  #backBtnBuy:hover, #backBtnSell:hover {
+    background-color: #5a6268;
+  }
+  .inline-flex {
+    display: flex;
+    align-items: center;
+  }
+  .inline-flex > label {
+    margin-right: 10px;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .display-field {
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    font-size: 1.1em;
+    color: #333;
+    margin-top: 4px;
+    user-select: none;
+  }
+  .purity-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .purity-options label {
+    font-size: 1.1em;
+    cursor: pointer;
+    user-select: none;
+  }
+</style>
 </head>
 <body>
 
-  <h1 id="pageHeader">黃金買賣計算器</h1>
+<h1 id="pageHeader">黃金買賣計算器</h1>
 
-  <div id="homeScreen">
-    <button id="btnBuyIn" class="main-btn">買入計算器</button>
-    <button id="btnSellOut" class="main-btn">賣出計算器</button>
+<div id="homeScreen">
+  <button id="btnBuyIn" class="main-btn">買入計算器</button>
+  <button id="btnSellOut" class="main-btn">賣出計算器</button>
+</div>
+
+<!-- Buy In (unchanged) -->
+<section id="buySection" style="display:none;">
+  <h2>買入計算器</h2>
+  <div class="inline-flex">
+    <label for="buyGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
+    <button type="button" id="refreshGoldPriceBuy" class="small-btn" title="刷新黃金價格">刷新</button>
+    <button type="button" id="resetBuy" class="small-btn" title="重置所有輸入欄位">重置</button>
+  </div>
+  <input type="number" id="buyGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+  <span id="adjustedBuyPriceDisplay"></span>
+  <label><input type="checkbox" id="premiumCheck" /> 減 HK$500 Premium</label>
+  <label>重量 (香港台兩): <input type="number" id="buyWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>純度 (%): <input type="number" id="buyPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>您的總購買價 (港幣): <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+
+  <div class="result" id="buyResult">尚未更新黃金價格</div>
+  <button id="backBtnBuy" class="main-btn">返回主頁</button>
+</section>
+
+<!-- Sell Out -->
+<section id="sellSection" style="display:none;">
+  <h2>賣出計算器</h2>
+  <div class="inline-flex">
+    <label for="sellGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
+    <button type="button" id="refreshGoldPriceSell" class="small-btn" title="刷新黃金價格">刷新</button>
+    <button type="button" id="resetSell" class="small-btn" title="重置所有輸入欄位">重置</button>
+  </div>
+  <input type="number" id="sellGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+
+  <label for="chingfaiPrice" style="margin-top: 12px;">景輝金價 (港幣 / 香港台兩):</label>
+  <input type="number" id="chingfaiPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  <span id="chingfaiPriceDisplay"></span>
+
+  <label>重量 (千分之一香港台兩):
+    <input type="number" id="sellWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+
+  <div class="purity-options" style="margin-bottom:10px;">
+    <label><input type="radio" name="purityPreset" value="99.99" id="purity99" /> 99.99%</label>
+    <label><input type="radio" name="purityPreset" value="75" id="purity75" /> 75%</label>
+    <label><input type="radio" name="purityPreset" value="custom" id="purityCustom" checked /> 自訂</label>
   </div>
 
-  <!-- Buy In -->
-  <section id="buySection" style="display:none;">
-    <h2>買入計算器</h2>
-    <div class="inline-flex">
-      <label for="buyGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
-      <button type="button" id="refreshGoldPriceBuy" class="small-btn" title="刷新黃金價格">刷新</button>
-      <button type="button" id="resetBuy" class="small-btn" title="重置所有輸入欄位">重置</button>
-    </div>
-    <input type="number" id="buyGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
-    <span id="adjustedBuyPriceDisplay"></span>
-    <label><input type="checkbox" id="premiumCheck" /> 減 HK$500 Premium</label>
-    <label>重量 (香港台兩): <input type="number" id="buyWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
-    <label>純度 (%): <input type="number" id="buyPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" /></label>
-    <label>您的總購買價 (港幣): <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>純度 (%):
+    <input type="number" id="sellPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
+  </label>
 
-    <div class="result" id="buyResult">尚未更新黃金價格</div>
-    <button id="backBtnBuy" class="main-btn">返回主頁</button>
-  </section>
+  <label>人工費 (港幣): <input type="number" id="labourCost" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
 
-  <!-- Sell Out -->
-  <section id="sellSection" style="display:none;">
-    <h2>賣出計算器</h2>
-    <div class="inline-flex">
-      <label for="sellGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
-      <button type="button" id="refreshGoldPriceSell" class="small-btn" title="刷新黃金價格">刷新</button>
-      <button type="button" id="resetSell" class="small-btn" title="重置所有輸入欄位">重置</button>
-    </div>
-    <input type="number" id="sellGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
-    <label>重量 (香港台兩): <input type="number" id="sellWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
-    <label>純度 (%): <input type="number" id="sellPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" /></label>
-    <label>人工費 (港幣): <input type="number" id="labourCost" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
-    <label>景輝金價 (港幣 / 香港台兩): <input type="number" id="chingfaiPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
-    <span id="chingfaiPriceDisplay"></span>
+  <label class="checkbox-label"><input type="checkbox" id="commissionCheck" /> 佣金2%</label>
 
-    <label class="checkbox-label"><input type="checkbox" id="commissionCheck" /> 佣金2%</label>
+  <label>售價 (港幣): <input type="number" id="userSellingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
 
-    <label>售價 (港幣): <input type="number" id="userSellingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>賣出價 (港幣): <div id="calculatedSellingPrice" class="display-field">尚未計算</div></label>
+  <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
 
-    <label>賣出價 (港幣): <div id="calculatedSellingPrice" class="display-field">尚未計算</div></label>
-    <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
+  <label class="checkbox-label"><input type="checkbox" id="creditCardCharge" /> 承擔信用卡費用 (3%)
+    <span id="creditCardChargeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.95em; color: #555;"></span></label>
 
-    <label class="checkbox-label"><input type="checkbox" id="creditCardCharge" /> 承擔信用卡費用 (3%)
-      <span id="creditCardChargeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.95em; color: #555;"></span></label>
-
-    <div class="result" id="sellResult">尚未更新黃金價格</div>
-    <button id="backBtnSell" class="main-btn">返回主頁</button>
-  </section>
+  <div class="result" id="sellResult">尚未更新黃金價格</div>
+  <button id="backBtnSell" class="main-btn">返回主頁</button>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -150,6 +175,36 @@ document.addEventListener('DOMContentLoaded', function() {
   const totalSellingPriceDisplay = document.getElementById('totalSellingPriceDisplay');
   const refreshGoldPriceBuyBtn = document.getElementById('refreshGoldPriceBuy');
   const refreshGoldPriceSellBtn = document.getElementById('refreshGoldPriceSell');
+
+  const purityRadios = document.getElementsByName('purityPreset');
+  const sellPurityInput = document.getElementById('sellPurity');
+
+  // Show/hide and update purity input according to preset selection
+  purityRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (radio.checked) {
+        if (radio.value === 'custom') {
+          sellPurityInput.readOnly = false;
+          sellPurityInput.value = 0;
+        } else {
+          sellPurityInput.readOnly = true;
+          sellPurityInput.value = parseFloat(radio.value).toFixed(2);
+        }
+        calculateSell();
+      }
+    });
+  });
+
+  // Handle manual edit to purity input (switch to custom)
+  sellPurityInput.addEventListener('input', () => {
+    // If user types in purity, set 'custom' radio checked
+    if (!sellPurityInput.readOnly) {
+      purityRadios.forEach(radio => {
+        if (radio.value === 'custom') radio.checked = true;
+      });
+      calculateSell();
+    }
+  });
 
   function showBuySection() {
     homeScreen.style.display = 'none';
@@ -183,10 +238,10 @@ document.addEventListener('DOMContentLoaded', function() {
       : `<span class="profit-negative">港幣 ${profit.toFixed(2)} ❌</span>`;
   }
 
-  function getPureWeight(weightFieldId, purityFieldId) {
-    const weight = parseFloat(document.getElementById(weightFieldId).value) || 0;
-    const purity = parseFloat(document.getElementById(purityFieldId).value) || 0;
-    return weight * (purity / 100);
+  function getPureWeight(weightFieldId, purityPercent) {
+    const weightThousand = parseFloat(document.getElementById(weightFieldId).value) || 0;
+    const weightInTael = weightThousand / 1000.0; // convert from 1/1000 tael to tael
+    return weightInTael * purityPercent / 100.0;
   }
 
   // Buy In calculator
@@ -201,9 +256,11 @@ document.addEventListener('DOMContentLoaded', function() {
       ? `調整後的黃金價格: 港幣 ${effectivePrice.toFixed(2)}（包含 HK$500 premium）`
       : '';
 
-    const pureWeight = getPureWeight('buyWeight', 'buyPurity');
+    const weight = parseFloat(document.getElementById('buyWeight').value) || 0;
+    const purity = parseFloat(document.getElementById('buyPurity').value) || 0;
     const totalBuyingPrice = parseFloat(document.getElementById('totalBuyingPrice').value) || 0;
 
+    const pureWeight = weight * (purity / 100);
     const currentValue = pureWeight * effectivePrice;
     const profit = currentValue - totalBuyingPrice;
 
@@ -222,10 +279,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const creditCardChargeChecked = creditCardChargeCheckbox.checked;
     const creditCardFeeRate = 0.03;
 
-    const pureWeight = getPureWeight('sellWeight', 'sellPurity');
+    // Determine purity from radio or custom value
+    let purityPercent = 0;
+    const selectedRadio = Array.from(purityRadios).find(radio => radio.checked);
+    if (selectedRadio) {
+      if (selectedRadio.value === 'custom') {
+        purityPercent = parseFloat(sellPurityInput.value) || 0;
+      } else {
+        purityPercent = parseFloat(selectedRadio.value);
+      }
+    }
+
+    // Calculate pure weight from weight (in 1/1000 Tael) and purity %
+    const pureWeight = getPureWeight('sellWeight', purityPercent);
 
     let chingfaiPrice = parseFloat(chingfaiInput.value) || 0;
 
+    // Calculate reference selling price (賣出價)
     let calculatedSellingPrice = 0;
     if (chingfaiPrice > 0) {
       calculatedSellingPrice = chingfaiPrice * pureWeight;
@@ -240,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let userSellingPrice = parseFloat(userSellingPriceInput.value) || 0;
 
-    // Use user input 售價 to calculate profit if > 0 else use calculated selling price
+    // Use user input 售價 if > 0, otherwise calculated selling price for profit calculation
     let sellingPriceForProfit = userSellingPrice > 0 ? userSellingPrice : calculatedSellingPrice;
 
     let profit = sellingPriceForProfit - (pureWeight * goldPrice) - labourCost;
@@ -263,6 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
+  // Reset functions clear user input fields and outputs
   function resetBuyInputs() {
     ['buyWeight', 'buyPurity', 'totalBuyingPrice'].forEach(id => {
       document.getElementById(id).value = 0;
@@ -274,11 +345,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function resetSellInputs() {
-    ['sellWeight', 'sellPurity', 'labourCost', 'chingfaiPrice', 'userSellingPrice'].forEach(id => {
+    ['sellWeight', 'labourCost', 'chingfaiPrice', 'userSellingPrice', 'sellPurity'].forEach(id => {
       document.getElementById(id).value = 0;
     });
     commissionCheck.checked = false;
     creditCardChargeCheckbox.checked = false;
+    purityRadios.forEach(radio => {
+      if (radio.value === 'custom') radio.checked = true;
+    });
     chingfaiPriceDisplay.textContent = '';
     calculatedSellingPriceDiv.textContent = '尚未計算';
     totalSellingPriceDisplay.textContent = '';
@@ -288,23 +362,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Event listeners
-  document.querySelectorAll('#buySection input:not(#premiumCheck)').forEach(el => {
-    el.addEventListener('input', calculateBuy);
-  });
+  document.querySelectorAll('#buySection input:not(#premiumCheck)').forEach(el => el.addEventListener('input', calculateBuy));
   premiumCheck.addEventListener('change', calculateBuy);
   document.getElementById('resetBuy').addEventListener('click', resetBuyInputs);
 
-  document.querySelectorAll('#sellSection input:not(#totalSellingPrice), #commissionCheck, #creditCardCharge').forEach(el => {
-    el.addEventListener('input', calculateSell);
-  });
-  document.getElementById('commissionCheck').addEventListener('change', calculateSell);
-  document.getElementById('creditCardCharge').addEventListener('change', calculateSell);
+  document.querySelectorAll('#sellSection input:not(#userSellingPrice)').forEach(el => el.addEventListener('input', calculateSell));
+  commissionCheck.addEventListener('change', calculateSell);
+  creditCardChargeCheckbox.addEventListener('change', calculateSell);
+  userSellingPriceInput.addEventListener('input', calculateSell);
+  purityRadios.forEach(radio => radio.addEventListener('change', () => {
+    if (radio.value !== 'custom') sellPurityInput.dispatchEvent(new Event('input'));
+  }));
+
   document.getElementById('resetSell').addEventListener('click', resetSellInputs);
 
-  document.getElementById('refreshGoldPriceBuy').addEventListener('click', fetchGoldPrice);
-  document.getElementById('refreshGoldPriceSell').addEventListener('click', fetchGoldPrice);
+  refreshGoldPriceBuyBtn.addEventListener('click', fetchGoldPrice);
+  refreshGoldPriceSellBtn.addEventListener('click', fetchGoldPrice);
 
-  // Initial gold price fetch once on page load
+  // Auto fetch gold price once on page load
   fetchGoldPrice();
 
   function fetchGoldPrice() {
@@ -314,10 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
     refreshGoldPriceBuyBtn.disabled = true;
     refreshGoldPriceSellBtn.disabled = true;
 
-    fetch(url, {
-      method: 'GET',
-      headers: { 'x-access-token': apiKey }
-    })
+    fetch(url, {method: 'GET', headers: {'x-access-token': apiKey}})
       .then(res => res.json())
       .then(data => {
         if (data.price) {
@@ -337,9 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
           alert('無法取得黃金價格，請稍後再試');
         }
       })
-      .catch(error => {
-        alert('獲取黃金價格時出錯: ' + error);
-      })
+      .catch(error => alert('獲取黃金價格時出錯: ' + error))
       .finally(() => {
         refreshGoldPriceBuyBtn.disabled = false;
         refreshGoldPriceSellBtn.disabled = false;
@@ -350,7 +420,6 @@ document.addEventListener('DOMContentLoaded', function() {
   homeScreen.style.display = 'block';
   buySection.style.display = 'none';
   sellSection.style.display = 'none';
-
 });
 </script>
 </body>
