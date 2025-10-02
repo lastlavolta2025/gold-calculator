@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器 (景輝金價功能版)</title>
+  <title>黃金買賣計算器 (含佣金自動計算)</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px; }
     h1, h2 { text-align: center; margin-bottom: 20px; }
+    .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
+    .profit-positive { color: green; }
+    .profit-negative { color: red; }
+    .checkbox-label { font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px; }
+    input[type=number] { padding: 8px; box-sizing: border-box; }
+    input[type=checkbox] { width: auto; margin-right: 6px; }
     button {
       display: block;
       width: 80%;
@@ -23,15 +29,10 @@
     button:hover { background-color: #0056b3; }
     section { border: 1px solid #ccc; padding: 15px; margin-bottom: 25px; border-radius: 8px; }
     label, input, span { display: block; margin-bottom: 8px; width: 100%; font-size: 1.1em; }
-    input[type=number] {
-      padding: 8px;
-      box-sizing: border-box;
+    #adjustedBuyPriceDisplay { font-size: 0.9em; color: #555; margin-top: -8px; margin-bottom: 12px; }
+    #chingfaiPriceDisplay, #totalSellingPriceDisplay {
+      font-size: 1em; color: #007bff; margin: 0 0 10px 0;
     }
-    input[type=checkbox] { width: auto; margin-right: 6px; display: inline-block; }
-    .checkbox-label { font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px;}
-    .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
-    .profit-positive { color: green; }
-    .profit-negative { color: red; }
     #backBtn {
       margin-top: 10px;
       background-color: #6c757d;
@@ -39,17 +40,6 @@
     }
     #backBtn:hover {
       background-color: #5a6268;
-    }
-    #adjustedBuyPriceDisplay {
-      font-size: 0.9em;
-      color: #555;
-      margin-top: -8px;
-      margin-bottom: 12px;
-    }
-    #chingfaiPriceDisplay {
-      font-size: 1em;
-      color: #007bff;
-      margin: 0 0 10px 0;
     }
   </style>
 </head>
@@ -62,7 +52,7 @@
     <button id="btnSellOut">賣出計算器</button>
   </div>
 
-  <!-- Buy In Section -->
+  <!-- Buy In Calculator -->
   <section id="buySection" style="display:none;">
     <h2>買入計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
@@ -87,7 +77,7 @@
     <button id="backBtnBuy" class="backBtn">返回主頁</button>
   </section>
 
-  <!-- Sell Out Section -->
+  <!-- Sell Out Calculator -->
   <section id="sellSection" style="display:none;">
     <h2>賣出計算器</h2>
     <label>黃金價格 (港幣 / 香港台兩):
@@ -106,19 +96,29 @@
       <input type="number" id="chingfaiPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
     </label>
     <span id="chingfaiPriceDisplay"></span>
-    <label>您的總出售價 (港幣):
-      <input type="number" id="totalSellingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="commissionCheck" />
+      佣金2%
     </label>
+
+    <label>您的總出售價 (港幣):
+      <input type="number" id="totalSellingPrice" readonly />
+    </label>
+    <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
+
     <label class="checkbox-label">
       <input type="checkbox" id="creditCardCharge" />
       承擔信用卡費用 (3%)
       <span id="creditCardChargeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.95em; color: #555;"></span>
     </label>
+
     <div class="result" id="sellResult">正在載入價格...</div>
     <button id="backBtnSell" class="backBtn">返回主頁</button>
   </section>
 
 <script>
+  let baseBuyGoldPrice = 0;
   const homeScreen = document.getElementById('homeScreen');
   const buySection = document.getElementById('buySection');
   const sellSection = document.getElementById('sellSection');
@@ -129,8 +129,9 @@
   const adjustedBuyPriceDisplay = document.getElementById('adjustedBuyPriceDisplay');
   const chingfaiInput = document.getElementById('chingfaiPrice');
   const chingfaiPriceDisplay = document.getElementById('chingfaiPriceDisplay');
-
-  let baseBuyGoldPrice = 0;
+  const commissionCheck = document.getElementById('commissionCheck');
+  const totalSellingPriceInput = document.getElementById('totalSellingPrice');
+  const totalSellingPriceDisplay = document.getElementById('totalSellingPriceDisplay');
 
   document.getElementById('btnBuyIn').addEventListener('click', () => {
     homeScreen.style.display = 'none';
@@ -138,17 +139,20 @@
     sellSection.style.display = 'none';
     pageHeader.textContent = '買入計算器';
   });
+
   document.getElementById('btnSellOut').addEventListener('click', () => {
     homeScreen.style.display = 'none';
     sellSection.style.display = 'block';
     buySection.style.display = 'none';
     pageHeader.textContent = '賣出計算器';
   });
+
   document.getElementById('backBtnBuy').addEventListener('click', () => {
     buySection.style.display = 'none';
     homeScreen.style.display = 'block';
     pageHeader.textContent = '黃金買賣計算器';
   });
+
   document.getElementById('backBtnSell').addEventListener('click', () => {
     sellSection.style.display = 'none';
     homeScreen.style.display = 'block';
@@ -196,56 +200,53 @@
 
   function calculateSell() {
     const goldPrice = parseFloat(document.getElementById('sellGoldPrice').value) || 0;
-    const weight = parseFloat(document.getElementById('sellWeight').value) || 0;
-    const purity = parseFloat(document.getElementById('sellPurity').value) || 0;
-    const totalSellingPrice = parseFloat(document.getElementById('totalSellingPrice').value) || 0;
     const labourCost = parseFloat(document.getElementById('labourCost').value) || 0;
-    const chingfaiPrice = parseFloat(chingfaiInput.value) || 0;
     const creditCardChargeChecked = creditCardChargeCheckbox.checked;
     const creditCardFeeRate = 0.03;
 
     const pureWeight = getSellOutPureWeight();
-    const currentValue = pureWeight * goldPrice;
 
-    let profit = totalSellingPrice - currentValue - labourCost;
+    let chingfaiPrice = parseFloat(chingfaiInput.value) || 0;
+    let baseSellPrice = 0;
+    if (chingfaiPrice > 0) {
+      baseSellPrice = chingfaiPrice * pureWeight;
+      if (commissionCheck.checked) {
+        baseSellPrice *= 1.02; // Add 2% commission
+      }
+    }
+
+    totalSellingPriceInput.value = baseSellPrice.toFixed(2);
+    totalSellingPriceDisplay.textContent = baseSellPrice > 0 ? `計算出的出售價：HKD ${baseSellPrice.toFixed(2)}` : '';
+
+    let profit = baseSellPrice - (pureWeight * goldPrice) - labourCost;
     let creditCardChargeAmount = 0;
     if (creditCardChargeChecked) {
-      creditCardChargeAmount = totalSellingPrice * creditCardFeeRate;
+      creditCardChargeAmount = baseSellPrice * creditCardFeeRate;
       profit -= creditCardChargeAmount;
     }
-
     creditCardChargeAmountSpan.textContent = creditCardChargeChecked ? `(HKD ${creditCardChargeAmount.toFixed(2)})` : '';
-
-    // 景輝金價 -> 出售價
-    let chingfaiDisplay = '';
-    if (chingfaiInput.value && chingfaiPrice > 0) {
-      const suggestedSellPrice = chingfaiPrice * pureWeight;
-      chingfaiDisplay = `出售價參考：${chingfaiPrice.toFixed(2)} × ${pureWeight.toFixed(4)} = <strong>HKD ${suggestedSellPrice.toFixed(2)}</strong>`;
-    }
-    chingfaiPriceDisplay.innerHTML = chingfaiDisplay;
 
     document.getElementById('sellResult').innerHTML = `
       純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
-      理論黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
-      您的總出售價: 港幣 ${totalSellingPrice.toFixed(2)}<br/>
+      理論黃金價值: 港幣 ${(pureWeight * goldPrice).toFixed(2)}<br/>
       人工費: 港幣 ${labourCost.toFixed(2)}<br/>
       ${creditCardChargeChecked ? '承擔信用卡費用 (3%)<br/>' : ''}
       利潤: ${formatProfit(profit)}
     `;
   }
 
-  // Buy In events
+  // Event listeners for Buy In
   document.querySelectorAll('#buySection input:not(#premiumCheck)').forEach(el => {
     el.addEventListener('input', calculateBuy);
   });
   premiumCheck.addEventListener('change', calculateBuy);
 
-  // Sell Out events including 景輝金價
-  document.querySelectorAll('#sellSection input').forEach(el => {
+  // Event listeners for Sell Out
+  document.querySelectorAll('#sellSection input:not(#totalSellingPrice)').forEach(el => {
     el.addEventListener('input', calculateSell);
   });
+  commissionCheck.addEventListener('change', calculateSell);
   creditCardChargeCheckbox.addEventListener('change', calculateSell);
-  chingfaiInput.addEventListener('input', calculateSell);
 
   async function fetchGoldPrice() {
     const apiKey = "goldapi-fwpichsmg850yg2-io";
@@ -279,10 +280,10 @@
       document.getElementById('sellResult').textContent = '資料獲取錯誤: ' + error;
     }
   }
-
   fetchGoldPrice();
   setInterval(fetchGoldPrice, 600000);
 
+  // Show home screen initially
   homeScreen.style.display = 'block';
   buySection.style.display = 'none';
   sellSection.style.display = 'none';
@@ -290,5 +291,6 @@
 </script>
 </body>
 </html>
+
 
 
