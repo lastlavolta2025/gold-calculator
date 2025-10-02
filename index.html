@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>黃金買賣計算器 (含刷新按鈕節省流量)</title>
+  <title>黃金買賣計算器 (自動初始價 + 可編輯賣出價)</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px; }
     h1, h2 { text-align: center; margin-bottom: 20px; }
@@ -35,9 +35,9 @@
       width: 100%;
       margin-bottom: 12px;
     }
-    .input-group input[type=number] {
+    .input-group label {
       flex-grow: 1;
-      margin-right: 8px;
+      margin-bottom: 0;
     }
     .refresh-btn {
       padding: 8px 12px;
@@ -48,6 +48,8 @@
       background-color: #007bff;
       color: white;
       transition: background-color 0.3s ease;
+      margin-left: 8px;
+      white-space: nowrap;
     }
     .refresh-btn:hover {
       background-color: #0056b3;
@@ -68,85 +70,87 @@
 </head>
 <body>
 
-  <h1 id="pageHeader">黃金買賣計算器</h1>
+<h1 id="pageHeader">黃金買賣計算器</h1>
 
-  <div id="homeScreen">
-    <button id="btnBuyIn" class="main-btn">買入計算器</button>
-    <button id="btnSellOut" class="main-btn">賣出計算器</button>
+<div id="homeScreen">
+  <button id="btnBuyIn" class="main-btn">買入計算器</button>
+  <button id="btnSellOut" class="main-btn">賣出計算器</button>
+</div>
+
+<!-- Buy In Calculator -->
+<section id="buySection" style="display:none;">
+  <h2>買入計算器</h2>
+  <div class="input-group">
+    <label for="buyGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
+    <button type="button" id="refreshGoldPriceBuy" class="refresh-btn" title="刷新黃金價格">刷新</button>
   </div>
+  <input type="number" id="buyGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+  <span id="adjustedBuyPriceDisplay"></span>
+  <label>
+    <input type="checkbox" id="premiumCheck" />
+    減 HK$500 Premium
+  </label>
+  <label>重量 (香港台兩):
+    <input type="number" id="buyWeight" value="1" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <label>純度 (%):
+    <input type="number" id="buyPurity" value="99.99" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <label>您的總購買價 (港幣):
+    <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
 
-  <!-- Buy In Calculator -->
-  <section id="buySection" style="display:none;">
-    <h2>買入計算器</h2>
-    <div class="input-group">
-      <label for="buyGoldPrice" style="flex-grow:1; margin-bottom:0;">黃金價格 (港幣 / 香港台兩):</label>
-      <button type="button" id="refreshGoldPrice" class="refresh-btn" title="刷新黃金價格">刷新</button>
-    </div>
-    <input type="number" id="buyGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
-    <span id="adjustedBuyPriceDisplay"></span>
-    <label>
-      <input type="checkbox" id="premiumCheck" />
-      減 HK$500 Premium
-    </label>
-    <label>重量 (香港台兩):
-      <input type="number" id="buyWeight" value="1" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <label>純度 (%):
-      <input type="number" id="buyPurity" value="99.99" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <label>您的總購買價 (港幣):
-      <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
-    </label>
+  <div class="result" id="buyResult">尚未刷新黃金價格</div>
+  <button id="backBtnBuy" class="main-btn">返回主頁</button>
+</section>
 
-    <div class="result" id="buyResult">尚未刷新黃金價格</div>
-    <button id="backBtnBuy" class="main-btn">返回主頁</button>
-  </section>
+<!-- Sell Out Calculator -->
+<section id="sellSection" style="display:none;">
+  <h2>賣出計算器</h2>
+  <div class="input-group">
+    <label for="sellGoldPrice">黃金價格 (港幣 / 香港台兩):</label>
+    <button type="button" id="refreshGoldPriceSell" class="refresh-btn" title="刷新黃金價格">刷新</button>
+  </div>
+  <input type="number" id="sellGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+  <label>重量 (香港台兩):
+    <input type="number" id="sellWeight" value="1" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <label>純度 (%):
+    <input type="number" id="sellPurity" value="99.99" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <label>人工費 (港幣):
+    <input type="number" id="labourCost" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <label>景輝金價 (港幣 / 香港台兩):
+    <input type="number" id="chingfaiPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  </label>
+  <span id="chingfaiPriceDisplay"></span>
 
-  <!-- Sell Out Calculator -->
-  <section id="sellSection" style="display:none;">
-    <h2>賣出計算器</h2>
-    <div class="input-group">
-      <label for="sellGoldPrice" style="flex-grow:1; margin-bottom:0;">黃金價格 (港幣 / 香港台兩):</label>
-      <button type="button" id="refreshGoldPriceSell" class="refresh-btn" title="刷新黃金價格">刷新</button>
-    </div>
-    <input type="number" id="sellGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
-    <label>重量 (香港台兩):
-      <input type="number" id="sellWeight" value="1" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <label>純度 (%):
-      <input type="number" id="sellPurity" value="99.99" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <label>人工費 (港幣):
-      <input type="number" id="labourCost" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <label>景輝金價 (港幣 / 香港台兩):
-      <input type="number" id="chingfaiPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
-    </label>
-    <span id="chingfaiPriceDisplay"></span>
+  <label class="checkbox-label">
+    <input type="checkbox" id="commissionCheck" />
+    佣金2%
+  </label>
 
-    <label class="checkbox-label">
-      <input type="checkbox" id="commissionCheck" />
-      佣金2%
-    </label>
+  <label>賣出價 (港幣):
+    <input type="number" id="totalSellingPrice" />
+  </label>
+  <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
 
-    <label>您的總出售價 (港幣):
-      <input type="number" id="totalSellingPrice" readonly />
-    </label>
-    <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
+  <label class="checkbox-label">
+    <input type="checkbox" id="creditCardCharge" />
+    承擔信用卡費用 (3%)
+    <span id="creditCardChargeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.95em; color: #555;"></span>
+  </label>
 
-    <label class="checkbox-label">
-      <input type="checkbox" id="creditCardCharge" />
-      承擔信用卡費用 (3%)
-      <span id="creditCardChargeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.95em; color: #555;"></span>
-    </label>
-
-    <div class="result" id="sellResult">尚未刷新黃金價格</div>
-    <button id="backBtnSell" class="main-btn">返回主頁</button>
-  </section>
+  <div class="result" id="sellResult">尚未刷新黃金價格</div>
+  <button id="backBtnSell" class="main-btn">返回主頁</button>
+</section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   let baseBuyGoldPrice = 0;
+  let totalSellPriceUserEdited = false;
+
   const homeScreen = document.getElementById('homeScreen');
   const buySection = document.getElementById('buySection');
   const sellSection = document.getElementById('sellSection');
@@ -160,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const commissionCheck = document.getElementById('commissionCheck');
   const totalSellingPriceInput = document.getElementById('totalSellingPrice');
   const totalSellingPriceDisplay = document.getElementById('totalSellingPriceDisplay');
-  const refreshGoldPriceBtn = document.getElementById('refreshGoldPrice');
+  const refreshGoldPriceBuyBtn = document.getElementById('refreshGoldPriceBuy');
   const refreshGoldPriceSellBtn = document.getElementById('refreshGoldPriceSell');
 
   function showBuySection() {
@@ -237,21 +241,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const pureWeight = getSellOutPureWeight();
 
     let chingfaiPrice = parseFloat(chingfaiInput.value) || 0;
+
     let baseSellPrice = 0;
     if (chingfaiPrice > 0) {
       baseSellPrice = chingfaiPrice * pureWeight;
       if (commissionCheck.checked) {
-        baseSellPrice *= 1.02; // Add 2% commission
+        baseSellPrice *= 1.02; 
       }
     }
 
-    totalSellingPriceInput.value = baseSellPrice.toFixed(2);
-    totalSellingPriceDisplay.textContent = baseSellPrice > 0 ? `計算出的出售價：HKD ${baseSellPrice.toFixed(2)}` : '';
+    if (!totalSellPriceUserEdited) {
+      totalSellingPriceInput.value = baseSellPrice.toFixed(2);
+      totalSellingPriceDisplay.textContent = baseSellPrice > 0 ? `計算出的賣出價：HKD ${baseSellPrice.toFixed(2)}` : '';
+    }
 
-    let profit = baseSellPrice - (pureWeight * goldPrice) - labourCost;
+    let userSellingPrice = parseFloat(totalSellingPriceInput.value) || 0;
+
+    let profit = userSellingPrice - (pureWeight * goldPrice) - labourCost;
     let creditCardChargeAmount = 0;
     if (creditCardChargeChecked) {
-      creditCardChargeAmount = baseSellPrice * creditCardFeeRate;
+      creditCardChargeAmount = userSellingPrice * creditCardFeeRate;
       profit -= creditCardChargeAmount;
     }
     creditCardChargeAmountSpan.textContent = creditCardChargeChecked ? `(HKD ${creditCardChargeAmount.toFixed(2)})` : '';
@@ -265,60 +274,82 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // Event listeners for Buy In
+  // Track if user manually edits selling price to pause auto updates
+  totalSellingPriceInput.addEventListener('input', () => {
+    totalSellPriceUserEdited = true;
+  });
+
+  // Reset user edit flag on inputs that influence selling price calc
+  [chingfaiInput, commissionCheck, document.getElementById('sellWeight'), document.getElementById('sellPurity')].forEach(el => {
+    el.addEventListener('input', () => {
+      totalSellPriceUserEdited = false;
+      calculateSell();
+    });
+  });
+
+  document.getElementById('sellWeight').addEventListener('input', calculateSell);
+  document.getElementById('sellPurity').addEventListener('input', calculateSell);
+  document.getElementById('labourCost').addEventListener('input', calculateSell);
+  creditCardChargeCheckbox.addEventListener('change', calculateSell);
+  commissionCheck.addEventListener('change', calculateSell);
+  chingfaiInput.addEventListener('input', calculateSell);
+
+  // Buy in events
   document.querySelectorAll('#buySection input:not(#premiumCheck)').forEach(el => {
     el.addEventListener('input', calculateBuy);
   });
   premiumCheck.addEventListener('change', calculateBuy);
 
-  // Event listeners for Sell Out
-  document.querySelectorAll('#sellSection input:not(#totalSellingPrice)').forEach(el => {
-    el.addEventListener('input', calculateSell);
-  });
-  commissionCheck.addEventListener('change', calculateSell);
-  creditCardChargeCheckbox.addEventListener('change', calculateSell);
+  // Refresh gold price buttons
+  refreshGoldPriceBuyBtn.addEventListener('click', fetchGoldPrice);
+  refreshGoldPriceSellBtn.addEventListener('click', fetchGoldPrice);
+
+  // Auto-fetch gold price once at page load
+  fetchGoldPrice();
 
   function fetchGoldPrice() {
     const apiKey = "goldapi-6acwsmg84yki2-io";
     const url = 'https://www.goldapi.io/api/XAU/HKD';
 
-    // Disable refresh buttons while loading
-    refreshGoldPriceBtn.disabled = true;
+    // Disable buttons while loading
+    refreshGoldPriceBuyBtn.disabled = true;
     refreshGoldPriceSellBtn.disabled = true;
 
     fetch(url, {
       method: 'GET',
       headers: { 'x-access-token': apiKey }
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.price) {
-        const pricePerTroyOunce = data.price;
-        const pricePerHKTael = pricePerTroyOunce * (37.429 / 31.1035);
+      .then(response => response.json())
+      .then(data => {
+        if (data.price) {
+          const pricePerTroyOunce = data.price;
+          const pricePerHKTael = pricePerTroyOunce * (37.429 / 31.1035);
 
-        baseBuyGoldPrice = pricePerHKTael;
-        document.getElementById('buyGoldPrice').value = pricePerHKTael.toFixed(2);
-        document.getElementById('sellGoldPrice').value = pricePerHKTael.toFixed(2);
+          baseBuyGoldPrice = pricePerHKTael;
+          document.getElementById('buyGoldPrice').value = pricePerHKTael.toFixed(2);
+          document.getElementById('sellGoldPrice').value = pricePerHKTael.toFixed(2);
 
-        calculateBuy();
-        calculateSell();
-      } else {
-        alert('無法取得黃金價格，請稍後再試');
-      }
-    })
-    .catch(error => {
-      alert('獲取黃金價格時出錯: ' + error);
-    })
-    .finally(() => {
-      refreshGoldPriceBtn.disabled = false;
-      refreshGoldPriceSellBtn.disabled = false;
-    });
+          calculateBuy();
+          calculateSell();
+
+          document.getElementById('buyResult').textContent = '';
+          document.getElementById('sellResult').textContent = '';
+        } else {
+          document.getElementById('buyResult').textContent = '無法取得黃金價格';
+          document.getElementById('sellResult').textContent = '無法取得黃金價格';
+        }
+      })
+      .catch(error => {
+        document.getElementById('buyResult').textContent = '資料獲取錯誤: ' + error;
+        document.getElementById('sellResult').textContent = '資料獲取錯誤: ' + error;
+      })
+      .finally(() => {
+        refreshGoldPriceBuyBtn.disabled = false;
+        refreshGoldPriceSellBtn.disabled = false;
+      });
   }
 
-  refreshGoldPriceBtn.addEventListener('click', fetchGoldPrice);
-  refreshGoldPriceSellBtn.addEventListener('click', fetchGoldPrice);
-
-  // Initially show home screen only
+  // Initial display states
   homeScreen.style.display = 'block';
   buySection.style.display = 'none';
   sellSection.style.display = 'none';
