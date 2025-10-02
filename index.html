@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>黃金買賣計算器（含重量千分之一台兩與純度選擇）</title>
+<title>黃金買賣計算器 (買入賣出最新版)</title>
 <style>
   body { font-family: Arial, sans-serif; max-width: 470px; margin: auto; padding: 20px;}
-  h1, h2 { text-align: center; margin-bottom: 20px; }
-  .result { margin-top: 12px; font-weight: bold; font-size: 1.1em; }
-  .profit-positive { color: green; }
-  .profit-negative { color: red; }
-  .checkbox-label { font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px; }
-  input[type=number], input[type=text] { padding: 8px; box-sizing: border-box; font-size: 1.1em; }
-  input[type=checkbox] { width: auto; margin-right: 6px; }
+  h1, h2 { text-align: center; margin-bottom: 20px;}
+  .result { margin-top: 12px; font-weight: bold; font-size: 1.1em;}
+  .profit-positive { color: green;}
+  .profit-negative { color: red;}
+  .checkbox-label { font-size: 1.05em; display: flex; align-items: center; margin-bottom: 15px;}
+  input[type=number], input[type=text] { padding: 8px; box-sizing: border-box; font-size:1.1em;}
+  input[type=checkbox] { width: auto; margin-right: 6px;}
   button.main-btn {
     display: block;
     width: 80%;
@@ -26,7 +26,7 @@
     color: white;
     transition: background-color 0.3s ease;
   }
-  button.main-btn:hover { background-color: #0056b3; }
+  button.main-btn:hover {background-color: #0056b3;}
   button.small-btn {
     padding: 6px 12px;
     font-size: 0.9em;
@@ -38,9 +38,9 @@
     transition: background-color 0.3s ease;
     margin-left: 10px;
   }
-  button.small-btn:hover { background-color: #5a6268; }
-  section { border: 1px solid #ccc; padding: 15px; margin-bottom: 30px; border-radius: 8px; }
-  label, input, span { display: block; margin-bottom: 8px; width: 100%; }
+  button.small-btn:hover {background-color: #5a6268;}
+  section { border: 1px solid #ccc; padding: 15px; margin-bottom: 30px; border-radius: 8px;}
+  label, input, span { display: block; margin-bottom: 8px; width: 100%;}
   #adjustedBuyPriceDisplay, #chingfaiPriceDisplay, #totalSellingPriceDisplay {
     font-size: 1em; color: #007bff; margin: 0 0 10px 0;
   }
@@ -92,7 +92,7 @@
   <button id="btnSellOut" class="main-btn">賣出計算器</button>
 </div>
 
-<!-- Buy In (unchanged) -->
+<!-- Buy In -->
 <section id="buySection" style="display:none;">
   <h2>買入計算器</h2>
   <div class="inline-flex">
@@ -100,12 +100,14 @@
     <button type="button" id="refreshGoldPriceBuy" class="small-btn" title="刷新黃金價格">刷新</button>
     <button type="button" id="resetBuy" class="small-btn" title="重置所有輸入欄位">重置</button>
   </div>
-  <input type="number" id="buyGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+  <input type="number" id="buyGoldPrice" value="" readonly inputmode="decimal" pattern="[0-9]*" />
+  <label for="chingfaiBuyPrice" style="margin-top: 12px;">景輝收金價 (港幣 / 香港台兩):</label>
+  <input type="number" id="chingfaiBuyPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
   <span id="adjustedBuyPriceDisplay"></span>
-  <label><input type="checkbox" id="premiumCheck" /> 減 HK$500 Premium</label>
-  <label>重量 (香港台兩): <input type="number" id="buyWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
-  <label>純度 (%): <input type="number" id="buyPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" /></label>
-  <label>您的總購買價 (港幣): <input type="number" id="totalBuyingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label><input type="checkbox" id="buyCommissionCheck" checked /> 佣金2% (計算乘以0.98)</label>
+  <label>重量 (千分之一香港台兩): <input type="number" id="buyWeight" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>純度 (%): <input type="number" id="buyPurity" value="" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>客戶要求收貨價 (港幣): <input type="number" id="requestedBuyPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
 
   <div class="result" id="buyResult">尚未更新黃金價格</div>
   <button id="backBtnBuy" class="main-btn">返回主頁</button>
@@ -119,31 +121,31 @@
     <button type="button" id="refreshGoldPriceSell" class="small-btn" title="刷新黃金價格">刷新</button>
     <button type="button" id="resetSell" class="small-btn" title="重置所有輸入欄位">重置</button>
   </div>
-  <input type="number" id="sellGoldPrice" value="0" readonly inputmode="decimal" pattern="[0-9]*" />
+  <input type="number" id="sellGoldPrice" value="" readonly inputmode="decimal" pattern="[0-9]*" />
 
   <label for="chingfaiPrice" style="margin-top: 12px;">景輝金價 (港幣 / 香港台兩):</label>
-  <input type="number" id="chingfaiPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+  <input type="number" id="chingfaiPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
   <span id="chingfaiPriceDisplay"></span>
 
   <label>重量 (千分之一香港台兩):
-    <input type="number" id="sellWeight" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
+    <input type="number" id="sellWeight" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" />
   </label>
 
   <div class="purity-options" style="margin-bottom:10px;">
-    <label><input type="radio" name="purityPreset" value="99.99" id="purity99" /> 99.99%</label>
+    <label><input type="radio" name="purityPreset" value="100" id="purity100" /> 100%</label>
     <label><input type="radio" name="purityPreset" value="75" id="purity75" /> 75%</label>
     <label><input type="radio" name="purityPreset" value="custom" id="purityCustom" checked /> 自訂</label>
   </div>
 
   <label>純度 (%):
-    <input type="number" id="sellPurity" value="0" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
+    <input type="number" id="sellPurity" value="" min="0" max="100" step="0.01" inputmode="decimal" pattern="[0-9]*" />
   </label>
 
-  <label>人工費 (港幣): <input type="number" id="labourCost" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>人工費 (港幣): <input type="number" id="labourCost" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
 
-  <label class="checkbox-label"><input type="checkbox" id="commissionCheck" /> 佣金2%</label>
+  <label class="checkbox-label"><input type="checkbox" id="commissionCheck" checked /> 佣金2%</label>
 
-  <label>售價 (港幣): <input type="number" id="userSellingPrice" value="0" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
+  <label>售價 (港幣): <input type="number" id="userSellingPrice" value="" min="0" step="any" inputmode="decimal" pattern="[0-9]*" /></label>
 
   <label>賣出價 (港幣): <div id="calculatedSellingPrice" class="display-field">尚未計算</div></label>
   <span id="totalSellingPriceDisplay" style="color:#007bff; margin-top: -10px; margin-bottom: 15px;"></span>
@@ -156,55 +158,35 @@
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   let baseBuyGoldPrice = 0;
 
+  // DOM elements
   const homeScreen = document.getElementById('homeScreen');
   const buySection = document.getElementById('buySection');
   const sellSection = document.getElementById('sellSection');
   const pageHeader = document.getElementById('pageHeader');
-  const premiumCheck = document.getElementById('premiumCheck');
+
+  const premiumCheck = document.getElementById('buyCommissionCheck');
   const creditCardChargeCheckbox = document.getElementById('creditCardCharge');
   const creditCardChargeAmountSpan = document.getElementById('creditCardChargeAmount');
   const adjustedBuyPriceDisplay = document.getElementById('adjustedBuyPriceDisplay');
+
+  const chingfaiBuyPriceInput = document.getElementById('chingfaiBuyPrice');
+  const requestedBuyPriceInput = document.getElementById('requestedBuyPrice');
+
   const chingfaiInput = document.getElementById('chingfaiPrice');
   const chingfaiPriceDisplay = document.getElementById('chingfaiPriceDisplay');
   const commissionCheck = document.getElementById('commissionCheck');
   const userSellingPriceInput = document.getElementById('userSellingPrice');
   const calculatedSellingPriceDiv = document.getElementById('calculatedSellingPrice');
   const totalSellingPriceDisplay = document.getElementById('totalSellingPriceDisplay');
+
   const refreshGoldPriceBuyBtn = document.getElementById('refreshGoldPriceBuy');
   const refreshGoldPriceSellBtn = document.getElementById('refreshGoldPriceSell');
 
   const purityRadios = document.getElementsByName('purityPreset');
   const sellPurityInput = document.getElementById('sellPurity');
-
-  // Show/hide and update purity input according to preset selection
-  purityRadios.forEach(radio => {
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        if (radio.value === 'custom') {
-          sellPurityInput.readOnly = false;
-          sellPurityInput.value = 0;
-        } else {
-          sellPurityInput.readOnly = true;
-          sellPurityInput.value = parseFloat(radio.value).toFixed(2);
-        }
-        calculateSell();
-      }
-    });
-  });
-
-  // Handle manual edit to purity input (switch to custom)
-  sellPurityInput.addEventListener('input', () => {
-    // If user types in purity, set 'custom' radio checked
-    if (!sellPurityInput.readOnly) {
-      purityRadios.forEach(radio => {
-        if (radio.value === 'custom') radio.checked = true;
-      });
-      calculateSell();
-    }
-  });
 
   function showBuySection() {
     homeScreen.style.display = 'none';
@@ -246,28 +228,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Buy In calculator
   function calculateBuy() {
-    const includePremium = premiumCheck.checked;
-    let effectivePrice = baseBuyGoldPrice;
-    if (includePremium) {
-      effectivePrice -= 500;
-    }
+    const includeCommission = premiumCheck.checked;
+    let chingfaiBuyPrice = parseFloat(chingfaiBuyPriceInput.value) || 0;
+    let commissionMultiplier = includeCommission ? 0.98 : 1.0;
 
-    adjustedBuyPriceDisplay.textContent = includePremium
-      ? `調整後的黃金價格: 港幣 ${effectivePrice.toFixed(2)}（包含 HK$500 premium）`
+    adjustedBuyPriceDisplay.textContent = includeCommission
+      ? `計算假設扣除2%佣金，實際買入價格將乘以0.98`
       : '';
 
-    const weight = parseFloat(document.getElementById('buyWeight').value) || 0;
     const purity = parseFloat(document.getElementById('buyPurity').value) || 0;
-    const totalBuyingPrice = parseFloat(document.getElementById('totalBuyingPrice').value) || 0;
+    const pureWeight = getPureWeight('buyWeight', purity);
 
-    const pureWeight = weight * (purity / 100);
-    const currentValue = pureWeight * effectivePrice;
-    const profit = currentValue - totalBuyingPrice;
+    // Effective buying value based on 景輝收金價 and commission
+    let effectiveBuyValue = chingfaiBuyPrice * pureWeight * commissionMultiplier;
+
+    const requestedBuyPrice = parseFloat(requestedBuyPriceInput.value) || 0;
+
+    // Profit = 程式計算值 (effectiveBuyValue) - 用戶輸入的收貨價格（如無輸入則用程式計算）
+    let buyCost = requestedBuyPrice > 0 ? requestedBuyPrice : effectiveBuyValue;
+
+    let profit = effectiveBuyValue - buyCost;
 
     document.getElementById('buyResult').innerHTML = `
       純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
-      當前黃金價值: 港幣 ${currentValue.toFixed(2)}<br/>
-      您的總購買價: 港幣 ${totalBuyingPrice.toFixed(2)}<br/>
+      實際估算買入價（扣佣後）: 港幣 ${effectiveBuyValue.toFixed(2)}<br/>
+      客戶要求收貨價: 港幣 ${buyCost.toFixed(2)}<br/>
       利潤: ${formatProfit(profit)}
     `;
   }
@@ -279,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const creditCardChargeChecked = creditCardChargeCheckbox.checked;
     const creditCardFeeRate = 0.03;
 
-    // Determine purity from radio or custom value
+    // Purity from selected or custom
     let purityPercent = 0;
     const selectedRadio = Array.from(purityRadios).find(radio => radio.checked);
     if (selectedRadio) {
@@ -290,17 +275,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Calculate pure weight from weight (in 1/1000 Tael) and purity %
+    // Weight in 1/1000 Tael
     const pureWeight = getPureWeight('sellWeight', purityPercent);
 
     let chingfaiPrice = parseFloat(chingfaiInput.value) || 0;
 
-    // Calculate reference selling price (賣出價)
+    // Calculate selling price reference with commission 2% if checked
     let calculatedSellingPrice = 0;
     if (chingfaiPrice > 0) {
       calculatedSellingPrice = chingfaiPrice * pureWeight;
       if (commissionCheck.checked) {
-        calculatedSellingPrice *= 1.02; // Add 2% commission
+        calculatedSellingPrice *= 1.02; 
       }
     }
 
@@ -310,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let userSellingPrice = parseFloat(userSellingPriceInput.value) || 0;
 
-    // Use user input 售價 if > 0, otherwise calculated selling price for profit calculation
+    // Use user input 售價 to calculate profit if > 0 else calculated selling price
     let sellingPriceForProfit = userSellingPrice > 0 ? userSellingPrice : calculatedSellingPrice;
 
     let profit = sellingPriceForProfit - (pureWeight * goldPrice) - labourCost;
@@ -333,12 +318,12 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
 
-  // Reset functions clear user input fields and outputs
+  // Reset functions clear inputs and outputs
   function resetBuyInputs() {
-    ['buyWeight', 'buyPurity', 'totalBuyingPrice'].forEach(id => {
-      document.getElementById(id).value = 0;
+    ['chingfaiBuyPrice', 'buyWeight', 'buyPurity', 'requestedBuyPrice'].forEach(id => {
+      document.getElementById(id).value = '';
     });
-    premiumCheck.checked = false;
+    premiumCheck.checked = true;
     adjustedBuyPriceDisplay.textContent = '';
     document.getElementById('buyResult').textContent = '';
     calculateBuy();
@@ -346,9 +331,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function resetSellInputs() {
     ['sellWeight', 'labourCost', 'chingfaiPrice', 'userSellingPrice', 'sellPurity'].forEach(id => {
-      document.getElementById(id).value = 0;
+      document.getElementById(id).value = '';
     });
-    commissionCheck.checked = false;
+    commissionCheck.checked = true;
     creditCardChargeCheckbox.checked = false;
     purityRadios.forEach(radio => {
       if (radio.value === 'custom') radio.checked = true;
@@ -361,25 +346,30 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateSell();
   }
 
-  // Event listeners
-  document.querySelectorAll('#buySection input:not(#premiumCheck)').forEach(el => el.addEventListener('input', calculateBuy));
+  // Event listeners - Buy In
+  document.querySelectorAll('#buySection input:not(#buyGoldPrice, #premiumCheck)').forEach(el => el.addEventListener('input', calculateBuy));
   premiumCheck.addEventListener('change', calculateBuy);
   document.getElementById('resetBuy').addEventListener('click', resetBuyInputs);
 
-  document.querySelectorAll('#sellSection input:not(#userSellingPrice)').forEach(el => el.addEventListener('input', calculateSell));
+  // Event listeners - Sell Out
+  document.querySelectorAll('#sellSection input:not(#sellGoldPrice)').forEach(el => el.addEventListener('input', calculateSell));
   commissionCheck.addEventListener('change', calculateSell);
   creditCardChargeCheckbox.addEventListener('change', calculateSell);
-  userSellingPriceInput.addEventListener('input', calculateSell);
   purityRadios.forEach(radio => radio.addEventListener('change', () => {
     if (radio.value !== 'custom') sellPurityInput.dispatchEvent(new Event('input'));
   }));
-
+  userSellingPriceInput.addEventListener('input', calculateSell);
   document.getElementById('resetSell').addEventListener('click', resetSellInputs);
 
+  // Refresh gold price buttons
   refreshGoldPriceBuyBtn.addEventListener('click', fetchGoldPrice);
   refreshGoldPriceSellBtn.addEventListener('click', fetchGoldPrice);
 
-  // Auto fetch gold price once on page load
+  // Initial state
+  premiumCheck.checked = true;
+  commissionCheck.checked = true;
+
+  // Initial fetch once on load
   fetchGoldPrice();
 
   function fetchGoldPrice() {
@@ -389,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     refreshGoldPriceBuyBtn.disabled = true;
     refreshGoldPriceSellBtn.disabled = true;
 
-    fetch(url, {method: 'GET', headers: {'x-access-token': apiKey}})
+    fetch(url, { method: 'GET', headers: { 'x-access-token': apiKey }})
       .then(res => res.json())
       .then(data => {
         if (data.price) {
