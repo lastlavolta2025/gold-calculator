@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>黃金買賣計算器 - 全新版本</title>
+<title>黃金買賣計算器 - 容錯新版</title>
 <style>
   body { font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 20px; }
   h1 { text-align: center; margin-bottom: 20px; }
@@ -12,7 +12,6 @@
     width: 80%; margin: 15px auto; padding: 15px; border-radius: 8px; border:none; background:#007bff; color:#fff; font-size: 1.25em;
   }
   button.main-btn:hover { background:#0056b3; }
-
   .selector { text-align: center; margin-bottom: 10px; }
   section { display: none; border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 25px; }
   section.active { display: block; }
@@ -26,7 +25,6 @@
   .result { margin-top: 15px; font-size: 1.15em; font-weight: bold; color: #007bff; }
   .profit-positive { color: green; }
   .profit-negative { color: red; }
-
   .note {
     font-size: 0.9em;
     color: #555;
@@ -46,7 +44,7 @@
 
 <section id="buySection">
   <label>實時黃金價格 (HKD / 台兩):</label>
-  <input id="buyGoldPrice" type="number" readonly placeholder="載入中..." />
+  <input id="buyGoldPrice" type="number" placeholder="載入中，無法獲取金價時可手動輸入" />
   <button id="refreshBuyPrice" style="margin:10px auto;display:block;">刷新金價</button>
 
   <label>景輝收金價 (HKD / 台兩):</label>
@@ -72,7 +70,7 @@
 
 <section id="sellSection">
   <label>實時黃金價格 (HKD / 台兩):</label>
-  <input id="sellGoldPrice" type="number" readonly placeholder="載入中..." />
+  <input id="sellGoldPrice" type="number" placeholder="載入中，無法獲取金價時可手動輸入" />
   <button id="refreshSellPrice" style="margin:10px auto;display:block;">刷新金價</button>
 
   <label>景輝賣金價 (HKD / 台兩):</label>
@@ -93,13 +91,14 @@
   <input id="labourCost" type="number" min="0" step="any" placeholder="輸入人工費用" />
 
   <label class="inline-flex"><input id="commissionSell" type="checkbox" checked /> 加入2%佣金</label>
+
   <label>售價 (HKD):</label>
   <input id="userSellingPrice" type="number" min="0" step="any" placeholder="可修改以模擬利潤" />
 
   <label>計算賣出價:</label>
   <div id="calculatedSellPrice" class="display-field">尚未計算</div>
 
-  <label class="inline-flex"><input id="creditCardFee" type="checkbox" /> 承擔信用卡費用(3%) 
+  <label class="inline-flex"><input id="creditCardFee" type="checkbox" /> 承擔信用卡費用(3%)
     <span id="creditCardFeeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.9em; color: #555;"></span>
   </label>
 
@@ -109,238 +108,246 @@
 
 <script>
 (() => {
-  // UI Elements
+  // Cache all needed DOM elements
   const buyBtn = document.getElementById('btnBuy');
   const sellBtn = document.getElementById('btnSell');
   const buySection = document.getElementById('buySection');
   const sellSection = document.getElementById('sellSection');
 
-  const buyGoldPriceInput = document.getElementById('buyGoldPrice');
-  const chingfaiBuyPriceInput = document.getElementById('chingfaiBuyPrice');
-  const buyWeightInput = document.getElementById('buyWeight');
+  const buyGoldPrice = document.getElementById('buyGoldPrice');
+  const chingfaiBuyPrice = document.getElementById('chingfaiBuyPrice');
+  const buyWeight = document.getElementById('buyWeight');
   const buyPurityRadios = document.getElementsByName('buyPurity');
-  const buyPurityCustomInput = document.getElementById('buyPurityCustom');
-  const requestedBuyPriceInput = document.getElementById('requestedBuyPrice');
-  const buyResultDiv = document.getElementById('buyResult');
-  const resetBuyBtn = document.getElementById('resetBuy');
-  const refreshBuyPriceBtn = document.getElementById('refreshBuyPrice');
+  const buyPurityCustom = document.getElementById('buyPurityCustom');
+  const requestedBuyPrice = document.getElementById('requestedBuyPrice');
+  const buyResult = document.getElementById('buyResult');
+  const resetBuy = document.getElementById('resetBuy');
+  const refreshBuyPrice = document.getElementById('refreshBuyPrice');
 
-  const sellGoldPriceInput = document.getElementById('sellGoldPrice');
-  const chingfaiSellPriceInput = document.getElementById('chingfaiSellPrice');
-  const sellWeightInput = document.getElementById('sellWeight');
+  const sellGoldPrice = document.getElementById('sellGoldPrice');
+  const chingfaiSellPrice = document.getElementById('chingfaiSellPrice');
+  const sellWeight = document.getElementById('sellWeight');
   const sellPurityRadios = document.getElementsByName('sellPurity');
-  const sellPurityCustomInput = document.getElementById('sellPurityCustom');
-  const labourCostInput = document.getElementById('labourCost');
-  const commissionSellCheckbox = document.getElementById('commissionSell');
-  const userSellingPriceInput = document.getElementById('userSellingPrice');
-  const calculatedSellPriceDiv = document.getElementById('calculatedSellPrice');
-  const creditCardFeeCheckbox = document.getElementById('creditCardFee');
-  const creditCardFeeAmountSpan = document.getElementById('creditCardFeeAmount');
-  const sellResultDiv = document.getElementById('sellResult');
-  const resetSellBtn = document.getElementById('resetSell');
-  const refreshSellPriceBtn = document.getElementById('refreshSellPrice');
+  const sellPurityCustom = document.getElementById('sellPurityCustom');
+  const labourCost = document.getElementById('labourCost');
+  const commissionSell = document.getElementById('commissionSell');
+  const userSellingPrice = document.getElementById('userSellingPrice');
+  const calculatedSellPrice = document.getElementById('calculatedSellPrice');
+  const creditCardFee = document.getElementById('creditCardFee');
+  const creditCardFeeAmount = document.getElementById('creditCardFeeAmount');
+  const sellResult = document.getElementById('sellResult');
+  const resetSell = document.getElementById('resetSell');
+  const refreshSellPrice = document.getElementById('refreshSellPrice');
 
-  // Constants for conversion
-  const gramsPerHongKongTael = 37.429;
-  const gramsPerTroyOunce = 31.1035;
+  const gramsPerHKTael = 37.429;
+  const gramsPerTroyOz = 31.1035;
 
-  // API key and endpoint
   const API_KEY = 'b59eca630c98a8dbc001ff5d576db229';
   const API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${API_KEY}&base=USD&currencies=XAU,HKD`;
 
-  // Show only one section
   function showSection(section) {
-    if (section === 'buy') {
-      buySection.classList.add('active');
-      sellSection.classList.remove('active');
+    if(section === 'buy') {
+      buySection.style.display = 'block';
+      sellSection.style.display = 'none';
     } else {
-      sellSection.classList.add('active');
-      buySection.classList.remove('active');
+      buySection.style.display = 'none';
+      sellSection.style.display = 'block';
     }
   }
 
-  // Get selected purity (including custom)
+  buyBtn.onclick = () => showSection('buy');
+  sellBtn.onclick = () => showSection('sell');
+
+  // Utilities to get purity value for both calculators
   function getSelectedPurity(radioNodeList, customInput) {
-    for (const r of radioNodeList) {
-      if (r.checked) {
-        if (r.value === 'custom') {
+    for(const radio of radioNodeList){
+      if(radio.checked){
+        if(radio.value === 'custom'){
           const val = parseFloat(customInput.value);
           return isNaN(val) ? 0 : val;
         }
-        return parseFloat(r.value);
+        return parseFloat(radio.value);
       }
     }
     return 0;
   }
 
-  // Calculate pure gold weight from input weight and purity
   function calculatePureWeight(weightInput, purity) {
     const weightThousand = parseFloat(weightInput.value);
-    if (isNaN(weightThousand) || purity <= 0) return 0;
+    if(isNaN(weightThousand) || purity <= 0) return 0;
     const weightTael = weightThousand / 1000;
-    return weightTael * purity / 100;
+    return weightTael * (purity / 100);
   }
 
-  // Calculate Buy In results
+  // Buy calculator function
   function calculateBuy() {
-    if (!buyGoldPriceInput.value || chingfaiBuyPriceInput.value === '') {
-      buyResultDiv.textContent = '請輸入所有必要數據';
+    if(!buyGoldPrice.value || chingfaiBuyPrice.value === '') {
+      buyResult.textContent = '請輸入所有必要數據';
       return;
     }
-    const purity = getSelectedPurity(buyPurityRadios, buyPurityCustomInput);
-    const weightPure = calculatePureWeight(buyWeightInput, purity);
-    const chingfaiPrice = parseFloat(chingfaiBuyPriceInput.value) || 0;
-    const commissionMultiplier = 0.98; // Always apply 2% commission
-    const estimatedBuyPrice = chingfaiPrice * weightPure * commissionMultiplier;
-    let requestedPrice = parseFloat(requestedBuyPriceInput.value);
+    const purity = getSelectedPurity(buyPurityRadios, buyPurityCustom);
+    const pureWeight = calculatePureWeight(buyWeight, purity);
+    const chingfaiPrice = parseFloat(chingfaiBuyPrice.value) || 0;
+    const commissionMultiplier = 0.98;// 2% commission deducted
+    const estimatedBuyPrice = chingfaiPrice * pureWeight * commissionMultiplier;
+    let requestedPrice = parseFloat(requestedBuyPrice.value);
     if (isNaN(requestedPrice)) requestedPrice = estimatedBuyPrice;
 
     const profit = estimatedBuyPrice - requestedPrice;
 
-    buyResultDiv.innerHTML = `
-      純金重量: ${weightPure.toFixed(4)} 香港台兩<br/>
+    buyResult.innerHTML = `
+      純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
       實估買入價（扣佣後）: 港幣 ${estimatedBuyPrice.toFixed(2)}<br/>
       客戶要求收貨價: 港幣 ${requestedPrice.toFixed(2)}<br/>
-      利潤: <span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">港幣 ${profit.toFixed(2)} ${profit >= 0 ? '✅' : '❌'}</span>
+      利潤: <span style="color:${profit >=0 ? 'green':'red'}">港幣 ${profit.toFixed(2)} ${profit >=0 ? '✅' : '❌'}</span>
     `;
   }
 
-  // Calculate Sell Out results
-  function calculateSell() {
-    if (!sellGoldPriceInput.value || chingfaiSellPriceInput.value === '') {
-      sellResultDiv.textContent = '請輸入所有必要數據';
+  // Sell calculator function
+  function calculateSell(){
+    if(!sellGoldPrice.value || chingfaiSellPrice.value === ''){
+      sellResult.textContent = '請輸入所有必要數據';
       return;
     }
-    const purity = getSelectedPurity(sellPurityRadios, sellPurityCustomInput);
-    const weightPure = calculatePureWeight(sellWeightInput, purity);
-    const chingfaiPrice = parseFloat(chingfaiSellPriceInput.value) || 0;
-    let basePrice = chingfaiPrice * weightPure;
-    if (commissionSellCheckbox.checked) basePrice *= 1.02;
-    const userPrice = parseFloat(userSellingPriceInput.value);
+    const purity = getSelectedPurity(sellPurityRadios, sellPurityCustom);
+    const pureWeight = calculatePureWeight(sellWeight, purity);
+    const chingfaiPrice = parseFloat(chingfaiSellPrice.value) || 0;
+    let basePrice = chingfaiPrice * pureWeight;
+    if(commissionSell.checked) basePrice *= 1.02;
+    const userPrice = parseFloat(userSellingPrice.value);
     const sellPrice = !isNaN(userPrice) && userPrice > 0 ? userPrice : basePrice;
-    const labourCost = parseFloat(labourCostInput.value) || 0;
-    let profit = sellPrice - (weightPure * parseFloat(sellGoldPriceInput.value)) - labourCost;
-    let creditCardCost = 0;
-    if (creditCardFeeCheckbox.checked) {
-      creditCardCost = sellPrice * 0.03;
-      profit -= creditCardCost;
+    const labour = parseFloat(labourCost.value) || 0;
+    let profit = sellPrice - (pureWeight * parseFloat(sellGoldPrice.value)) - labour;
+    let creditFee = 0;
+    if(creditCardFee.checked){
+      creditFee = sellPrice * 0.03;
+      profit -= creditFee;
     }
 
-    calculatedSellPriceDiv.textContent = basePrice > 0 ? `計算出的賣出價：HKD ${basePrice.toFixed(2)}` : '尚未計算';
+    calculatedSellPrice.textContent = basePrice > 0 ? `計算出的賣出價：HKD ${basePrice.toFixed(2)}` : '尚未計算';
 
-    creditCardFeeAmountSpan.textContent = creditCardCost > 0 ? `(HKD ${creditCardCost.toFixed(2)})` : '';
+    creditCardFeeAmount.textContent = creditFee > 0 ? `(HKD ${creditFee.toFixed(2)})` : '';
 
-    sellResultDiv.innerHTML = `
-      純金重量: ${weightPure.toFixed(4)} 香港台兩<br/>
-      理論黃金價值: 港幣 ${(weightPure * parseFloat(sellGoldPriceInput.value)).toFixed(2)}<br/>
-      人工費用: 港幣 ${labourCost.toFixed(2)}<br/>
-      ${creditCardFeeCheckbox.checked ? '承擔信用卡費用 (3%)<br/>' : ''}
-      利潤: <span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">港幣 ${profit.toFixed(2)} ${profit >= 0 ? '✅' : '❌'}</span>
+    sellResult.innerHTML = `
+      純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
+      理論黃金價值: 港幣 ${(pureWeight * parseFloat(sellGoldPrice.value)).toFixed(2)}<br/>
+      人工費用: 港幣 ${labour.toFixed(2)}<br/>
+      ${creditCardFee.checked ? '承擔信用卡費用 (3%)<br/>' : ''}
+      利潤: <span style="color:${profit >= 0 ? 'green':'red'}">港幣 ${profit.toFixed(2)} ${profit >=0 ? '✅' : '❌'}</span>
     `;
-
-    commissionDisplay.textContent = commissionSellCheckbox.checked && basePrice > 0
-      ? `佣金2% 已包括，約為HKD ${(basePrice / 1.02 * 0.02).toFixed(2)}`
-      : '佣金未計算';
   }
 
-  // Reset Inputs
-  function resetBuy() {
-    chingfaiBuyPriceInput.value = '';
-    buyWeightInput.value = '';
-    buyPurityCustomInput.value = '';
-    requestedBuyPriceInput.value = '';
-    buyPurityRadios[0].checked = true;  // Default 100%
+  // Reset functions
+  function resetBuy(){
+    chingfaiBuyPrice.value = '';
+    buyWeight.value = '';
+    buyPurityCustom.value = '';
+    requestedBuyPrice.value = '';
+    buyPurityRadios[0].checked = true;
+    buyResult.textContent = '';
     calculateBuy();
   }
 
-  function resetSell() {
-    chingfaiSellPriceInput.value = '';
-    sellWeightInput.value = '';
-    labourCostInput.value = '';
-    sellPurityCustomInput.value = '';
-    userSellingPriceInput.value = '';
-    commissionSellCheckbox.checked = true;
-    creditCardFeeCheckbox.checked = false;
-    sellPurityRadios[0].checked = true;  // Default 100%
+  function resetSell(){
+    chingfaiSellPrice.value = '';
+    sellWeight.value = '';
+    labourCost.value  = '';
+    sellPurityCustom.value = '';
+    userSellingPrice.value = '';
+    commissionSell.checked = true;
+    creditCardFee.checked = false;
+    sellPurityRadios[0].checked = true;
+    sellResult.textContent = '';
+    calculatedSellPrice.textContent = '尚未計算';
+    creditCardFeeAmount.textContent = '';
     calculateSell();
   }
 
-  // Event listeners binder helper
-  function addInputListeners() {
-    // Buy inputs
-    [chingfaiBuyPriceInput, buyWeightInput, requestedBuyPriceInput].forEach(ip => ip.addEventListener('input', calculateBuy));
-    buyPurityRadios.forEach(r => r.addEventListener('change', () => {
-      if (r.value === 'custom') {
-        buyPurityCustomInput.style.display = 'block';      
-      } else {
-        buyPurityCustomInput.style.display = 'none';
-      }
-      calculateBuy();
-    }));
-    buyPurityCustomInput.addEventListener('input', calculateBuy);
+  // Toggle display of custom purity input
+  function setupPurityRadios(radioNodeList, customInput){
+    radioNodeList.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if(radio.value === 'custom'){
+          customInput.style.display = 'block';
+        } else {
+          customInput.style.display = 'none';
+          customInput.value = '';
+        }
+        if(radioNodeList === buyPurityRadios){
+          calculateBuy();
+        } else {
+          calculateSell();
+        }
+      });
+    });
 
-    // Sell inputs
-    [chingfaiSellPriceInput, sellWeightInput, labourCostInput, userSellingPriceInput].forEach(ip => ip.addEventListener('input', calculateSell));
-    commissionSellCheckbox.addEventListener('change', calculateSell);
-    creditCardFeeCheckbox.addEventListener('change', calculateSell);
-    sellPurityRadios.forEach(r => r.addEventListener('change', () => {
-      if (r.value === 'custom') {
-        sellPurityCustomInput.style.display = 'block';
+    customInput.addEventListener('input', () => {
+      if(customInput.value === '') return;
+      if(radioNodeList === buyPurityRadios){
+        calculateBuy();
       } else {
-        sellPurityCustomInput.style.display = 'none';
+        calculateSell();
       }
-      calculateSell();
-    }));
-    sellPurityCustomInput.addEventListener('input', calculateSell);
+    });
   }
 
-  // Show and hide purity custom inputs initially
-  buyPurityCustomInput.style.display = 'none';
-  sellPurityCustomInput.style.display = 'none';
+  // Add listeners for inputs
+  function setupListeners(){
+    [chingfaiBuyPrice, buyWeight, requestedBuyPrice].forEach(input => input.addEventListener('input', calculateBuy));
+    [chingfaiSellPrice, sellWeight, labourCost, userSellingPrice].forEach(input => input.addEventListener('input', calculateSell));
+    commissionSell.addEventListener('change', calculateSell);
+    creditCardFee.addEventListener('change', calculateSell);
 
-  // Toggle sections buttons
-  buyBtn.addEventListener('click', () => showSection('buy'));
-  sellBtn.addEventListener('click', () => showSection('sell'));
+    refreshBuyPrice.addEventListener('click', fetchGoldPrice);
+    refreshSellPrice.addEventListener('click', fetchGoldPrice);
 
-  // Reset buttons
-  resetBuyBtn.addEventListener('click', resetBuy);
-  resetSellBtn.addEventListener('click', resetSell);
+    resetBuy.addEventListener('click', resetBuy);
+    resetSell.addEventListener('click', resetSell);
 
-  // Refresh price buttons
-  refreshBuyPriceBtn.addEventListener('click', fetchGoldPrice);
-  refreshSellPriceBtn.addEventListener('click', fetchGoldPrice);
+    buyPurityRadios.forEach(radio => radio.addEventListener('change', calculateBuy));
+    sellPurityRadios.forEach(radio => radio.addEventListener('change', calculateSell));
 
-  // Show Buy calculator on load
-  showSection('buy');
+    setupPurityRadios(buyPurityRadios, buyPurityCustom);
+    setupPurityRadios(sellPurityRadios, sellPurityCustom);
+  }
 
-  addInputListeners();
-
-  // Fetch gold price from API using metalpriceapi.com
-  function fetchGoldPrice() {
+  function fetchGoldPrice(){
     fetch(API_URL)
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.rates && data.rates.XAU && data.rates.HKD) {
-          const goldPriceUSD = data.rates.XAU;
+        if(data.success && data.rates && 'XAU' in data.rates && 'HKD' in data.rates){
+          const goldUSD = data.rates.XAU;
           const usdToHkd = data.rates.HKD;
-          const goldPriceHKD = goldPriceUSD * usdToHkd;
-          const pricePerHKTael = goldPriceHKD * (gramsPerHongKongTael / gramsPerTroyOunce);
-          baseBuyGoldPrice = pricePerHKTael;
-
-          buyGoldPriceInput.value = pricePerHKTael.toFixed(2);
-          sellGoldPriceInput.value = pricePerHKTael.toFixed(2);
+          // convert to HKD per tael
+          const goldHKD = goldUSD * usdToHkd;
+          const goldTael = goldHKD * (gramsPerHKTael / gramsPerTroyOz);
+          buyGoldPrice.value = goldTael.toFixed(2);
+          sellGoldPrice.value = goldTael.toFixed(2);
+          buyGoldPrice.readOnly = true;
+          sellGoldPrice.readOnly = true;
           calculateBuy();
           calculateSell();
         } else {
-          alert('無法取得黃金價格');
+          buyGoldPrice.value = '';
+          sellGoldPrice.value = '';
+          buyGoldPrice.readOnly = false;
+          sellGoldPrice.readOnly = false;
+          alert('未能自動獲取金價，請手動輸入');
         }
       })
-      .catch(err => alert('獲取黃金價格時出錯: ' + err));
+      .catch(err => {
+        buyGoldPrice.value = '';
+        buyGoldPrice.readOnly = false;
+        sellGoldPrice.value = '';
+        sellGoldPrice.readOnly = false;
+        alert('獲取金價時發生錯誤，請手動輸入');
+      });
   }
 
-  // Initial fetch on page load
+  // Initialize page
+  showSection('buy');
+  setupListeners();
   fetchGoldPrice();
-
 })();
 </script>
 
