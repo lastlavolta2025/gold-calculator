@@ -126,12 +126,12 @@
         <span id="buyInRefresh" class="price-refresh">重新整理</span>
       </label>
       <div class="checkbox-group" style="margin-top: 6px;">
-        <label><input type="checkbox" id="premium500" /> 從即時金價扣HK$500</label>
+        <label><input type="checkbox" id="premium500" checked /> 從即時金價扣HK$500</label>
         <label><input type="checkbox" id="premium1000" /> 從即時金價扣HK$1000</label>
       </div>
     </div>
 
-    <label for="dailyPriceBuyIn">每日景輝金價 (HKD/兩):</label>
+    <label for="dailyPriceBuyIn">每日景輝金價 (HKD/兩) <span style="font-weight:normal; font-size:0.85rem; color:#666;">(若留空則自動取即時 API 金價)</span>:</label>
     <input type="tel" inputmode="decimal" id="dailyPriceBuyIn" />
 
     <label for="weightBuyIn">重量 (毫兩):</label>
@@ -214,7 +214,6 @@
   </div>
 
   <script>
-    // 元素宣告（搬到最上方確保點擊事件安全引用）
     const homepage = document.getElementById('homepage');
     const buyInCalc = document.getElementById('buyInCalc');
     const sellOutCalc = document.getElementById('sellOutCalc');
@@ -295,13 +294,11 @@
     buyInRefresh.onclick = () => { liveGoldPriceHKD = null; fetchLivePrice('buyIn'); };
     sellOutRefresh.onclick = () => { liveGoldPriceHKD = null; fetchLivePrice('sellOut'); };
 
-    // 買入溢價互斥
     const premium500 = document.getElementById('premium500');
     const premium1000 = document.getElementById('premium1000');
     premium500.onclick = () => { if (premium500.checked) premium1000.checked = false; };
     premium1000.onclick = () => { if (premium1000.checked) premium500.checked = false; };
 
-    // 純度自訂啟用邏輯
     const purityRadiosBuyIn = document.getElementsByName('purityBuyIn');
     const customPurityBuyIn = document.getElementById('customPurityBuyIn');
     purityRadiosBuyIn.forEach(radio => {
@@ -321,18 +318,37 @@
     });
 
     // ==========================================
-    // 買入計算邏輯
+    // 買入計算邏輯 (已支援空金價自動套用 API)
     // ==========================================
     document.getElementById('calcBuyIn').onclick = () => {
-      const dailyPrice = parseFloat(document.getElementById('dailyPriceBuyIn').value);
+      const dailyPriceInput = document.getElementById('dailyPriceBuyIn').value.trim();
       const weight_milliTael = parseFloat(document.getElementById('weightBuyIn').value);
       const discountInput = parseFloat(document.getElementById('discountBuyIn').value);
       const commission = document.getElementById('commissionBuyIn').checked;
       const counterOfferInput = parseFloat(document.getElementById('counterofferBuyIn').value);
 
-      if (isNaN(dailyPrice) || isNaN(weight_milliTael) || weight_milliTael <= 0 || dailyPrice <= 0) {
-        alert('請輸入有效的每日金價和重量。');
+      if (isNaN(weight_milliTael) || weight_milliTael <= 0) {
+        alert('請輸入有效的重量。');
         return;
+      }
+
+      if (liveGoldPriceHKD === null) {
+        alert('無法取得即時金價，無法進行計算');
+        return;
+      }
+
+      // 調整 2 核心邏輯：如果每日景輝金價為空，直接套用 API 即時金價
+      let dailyPrice = 0;
+      let isUsingLivePriceAsDaily = false;
+      if (dailyPriceInput === "") {
+        dailyPrice = liveGoldPriceHKD;
+        isUsingLivePriceAsDaily = true;
+      } else {
+        dailyPrice = parseFloat(dailyPriceInput);
+        if (isNaN(dailyPrice) || dailyPrice <= 0) {
+          alert('請輸入有效的每日景輝金價。');
+          return;
+        }
       }
 
       let purityPercent = 100;
@@ -346,16 +362,13 @@
         return;
       }
 
-      if (liveGoldPriceHKD === null) {
-        alert('無法取得即時金價，無法計算利潤');
-        return;
-      }
-
       let premium = 0;
       if (premium500.checked) premium = 500;
       else if (premium1000.checked) premium = 1000;
 
       const livePriceWithPremium = liveGoldPriceHKD - premium;
+      
+      // 計算店鋪買入價（若留空，則用 API 金價去計算基礎店鋪收購價）
       let basePrice = dailyPrice * (weight_milliTael / 1000) * (purityPercent / 100);
 
       let discount = 1.0;
@@ -365,6 +378,7 @@
       basePrice *= discount;
       if (commission) basePrice *= 0.98;
 
+      // 即時市場價值（扣除溢價）
       const marketPriceTotal = livePriceWithPremium * (weight_milliTael / 1000) * (purityPercent / 100);
 
       let profitBuyIn = 0;
@@ -384,8 +398,11 @@
       document.getElementById('marginBuyIn').textContent = `利潤率: ${marginPercent.toFixed(2)}%`;
 
       const profitColor = profitBuyIn >= 0 ? 'green' : '#d9534f';
+      
+      let priceSourceText = isUsingLivePriceAsDaily ? ' (自動套用 API 金價)' : '';
+
       document.getElementById('resultBuyIn').innerHTML =
-        `<div style="font-size:0.9rem; color:black;">買入價格（含佣金及折扣）: HKD ${Math.ceil(basePrice)}<br>` +
+        `<div style="font-size:0.9rem; color:black;">店鋪買入價${priceSourceText}: HKD ${Math.ceil(basePrice)}<br>` +
         `即時市場價格（扣除溢價）: HKD ${Math.ceil(marketPriceTotal)}${displayOfferPrice}</div>` +
         `<div style="font-size:1.2rem; font-weight:bold; color:${profitColor}; margin-top:6px;">買入利潤: HKD ${Math.ceil(profitBuyIn)}</div>`;
     };
@@ -395,7 +412,7 @@
       document.getElementById('weightBuyIn').value = '';
       document.getElementById('discountBuyIn').value = '';
       document.getElementById('commissionBuyIn').checked = true;
-      premium500.checked = false;
+      premium500.checked = true;  // 重設時回復預設勾選扣 $500
       premium1000.checked = false;
       purityRadiosBuyIn[0].checked = true;
       customPurityBuyIn.value = '';
@@ -407,29 +424,26 @@
 
 
     // ==========================================
-    // 賣出計算邏輯 (已全面優化)
+    // 賣出計算邏輯
     // ==========================================
     document.getElementById('calcSellOut').onclick = () => {
       const dailyPriceInput = document.getElementById('dailyPriceSellOut').value.trim();
       const weight_milliTael = parseFloat(document.getElementById('weightSellOut').value);
       const commission = document.getElementById('commissionSellOut').checked;
-      const labourCost = parseFloat(document.getElementById('labourCost').value) || 0; // 預設為0，可不填
+      const labourCost = parseFloat(document.getElementById('labourCost').value) || 0;
       const creditCard = document.getElementById('creditCardFee').checked;
       const counterOfferInput = parseFloat(document.getElementById('counterofferSellOut').value);
 
-      // 基本重量檢查
       if (isNaN(weight_milliTael) || weight_milliTael <= 0) {
         alert('請輸入有效的重量。');
         return;
       }
 
-      // API金價檢查
       if (liveGoldPriceHKD === null) {
         alert('無法取得即時金價，無法計算利潤。');
         return;
       }
 
-      // 取得純度
       let purityPercent = 100;
       purityRadiosSellOut.forEach(radio => {
         if (radio.checked) {
@@ -441,7 +455,6 @@
         return;
       }
 
-      // 計算即時市場成本價
       const marketPriceTotalSell = liveGoldPriceHKD * (weight_milliTael / 1000) * (purityPercent / 100);
 
       let basePrice = 0;
@@ -449,40 +462,34 @@
       let displayOfferPrice = '';
       let isDirectCounterOfferMode = false;
 
-      // 判斷是否為：免景輝金價，直接由客戶還價推算利潤模式
       if (dailyPriceInput === "") {
         if (isNaN(counterOfferInput) || counterOfferInput <= 0) {
           alert('若不輸入每日景輝金價，則必須輸入有效的「客戶還價」來直接計算利潤。');
           return;
         }
         isDirectCounterOfferMode = true;
-        basePrice = counterOfferInput; // 最終交易價就是客戶還價
-        profitSellOut = counterOfferInput - marketPriceTotalSell - labourCost; // 還價 - 市場金價成本 - 人工成本
+        basePrice = counterOfferInput;
+        profitSellOut = counterOfferInput - marketPriceTotalSell - labourCost;
         displayOfferPrice = `\n客戶還價直接計算模式`;
       } else {
-        // 正常模式：有輸入景輝金價
         const dailyPrice = parseFloat(dailyPriceInput);
         if (isNaN(dailyPrice) || dailyPrice <= 0) {
           alert('請輸入有效的每日景輝金價。');
           return;
         }
 
-        // 店鋪標準賣出報價計算
         basePrice = dailyPrice * (weight_milliTael / 1000) * (purityPercent / 100);
         if (commission) basePrice *= 1.02;
-        basePrice += labourCost; // 人工費加進報價中
+        basePrice += labourCost;
 
         if (!isNaN(counterOfferInput) && counterOfferInput > 0) {
-          // 有還價：利潤 = 還價 - 市場金價成本 - 人工成本
           profitSellOut = counterOfferInput - marketPriceTotalSell - labourCost;
           displayOfferPrice = `\n客戶還價: HKD ${counterOfferInput.toFixed(2)}`;
-          // 刷卡手續費改以「實際成交的還價」為基數扣除成本
           if (creditCard) {
             const creditCardFee = counterOfferInput * 0.03;
             profitSellOut -= creditCardFee;
           }
         } else {
-          // 無還價：利潤 = 標準報價 - 市場金價成本 - 人工成本
           profitSellOut = basePrice - marketPriceTotalSell - labourCost;
           if (creditCard) {
             const creditCardFee = basePrice * 0.03;
@@ -491,13 +498,11 @@
         }
       }
 
-      // 在直接還價模式下，如果勾選信用卡，手續費成本同樣扣除
       if (isDirectCounterOfferMode && creditCard) {
         const creditCardFee = counterOfferInput * 0.03;
         profitSellOut -= creditCardFee;
       }
 
-      // 計算賣出利潤率 (利潤 / 市場金價成本 * 100%)
       let marginPercent = 0;
       if (marketPriceTotalSell > 0) {
         marginPercent = (profitSellOut / marketPriceTotalSell) * 100;
@@ -534,7 +539,6 @@
       document.getElementById('marginSellOut').textContent = '';
     };
 
-    // 初始化讀取
     fetchLivePrice('buyIn');
   </script>
 </body>
