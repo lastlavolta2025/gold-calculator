@@ -1,355 +1,541 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>黃金買賣計算器 - 容錯新版</title>
-<style>
-  body { font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 20px; }
-  h1 { text-align: center; margin-bottom: 20px; }
-  button { cursor: pointer; }
-  button.main-btn {
-    width: 80%; margin: 15px auto; padding: 15px; border-radius: 8px; border:none; background:#007bff; color:#fff; font-size: 1.25em;
-  }
-  button.main-btn:hover { background:#0056b3; }
-  .selector { text-align: center; margin-bottom: 10px; }
-  section { display: none; border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 25px; }
-  section.active { display: block; }
-  label { display: block; margin: 10px 0 5px 0; font-weight: 600; }
-  input[type=number], input[type=text] {
-    width: 100%; padding: 8px; font-size: 1.1em; border-radius: 5px; border: 1px solid #aaa; box-sizing: border-box;
-  }
-  .inline-flex { display: flex; align-items: center; gap: 10px; }
-  .inline-flex input[type=radio], .inline-flex input[type=checkbox] { width: auto; }
-  .purity-options label { cursor: pointer; user-select: none; }
-  .result { margin-top: 15px; font-size: 1.15em; font-weight: bold; color: #007bff; }
-  .profit-positive { color: green; }
-  .profit-negative { color: red; }
-  .note {
-    font-size: 0.9em;
-    color: #555;
-    margin-top: 8px;
-    font-style: italic;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>景輝金鋪計算器 (HKD)</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 15px 10px;
+      background: #fff;
+      color: #333;
+      font-size: 16px;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    .hidden {
+      display: none;
+    }
+    button {
+      margin: 12px auto;
+      padding: 16px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #0275d8;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 3px 7px rgb(2 117 216 / 0.6);
+      transition: background-color 0.3s ease;
+      display: block;
+      width: 80%;
+      max-width: 300px;
+    }
+    button:hover {
+      background-color: #025aa5;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px 0;
+      font-weight: 600;
+    }
+    input[type="tel"], input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    input[type="number"]:focus, input[type="tel"]:focus {
+      border-color: #0275d8;
+      outline: none;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 12px 0 5px;
+    }
+    .checkbox-group label {
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 18px;
+      font-weight: 700;
+      font-size: 1.3rem;
+      text-align: center;
+      min-height: 4em;
+      line-height: 1.3em;
+      white-space: pre-wrap;
+    }
+    .margin-display {
+      margin-top: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #555;
+      text-align: center;
+    }
+    .price-refresh {
+      cursor: pointer;
+      color: #0275d8;
+      text-decoration: underline;
+      margin-left: 10px;
+      font-weight: normal;
+      font-size: 0.9rem;
+    }
+    #homepage {
+      margin-top: 5em;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 10px 5px;
+        font-size: 14px;
+      }
+      button {
+        padding: 12px 20px;
+        font-size: 1.1rem;
+        max-width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <h1>景輝金鋪計算器 (HKD)</h1>
 
-<h1>黃金買賣計算器</h1>
-
-<div class="selector">
-  <button id="btnBuy" class="main-btn">買入計算器</button>
-  <button id="btnSell" class="main-btn">賣出計算器</button>
-</div>
-
-<section id="buySection">
-  <label>實時黃金價格 (HKD / 台兩):</label>
-  <input id="buyGoldPrice" type="number" placeholder="載入中，無法獲取金價時可手動輸入" />
-  <button id="refreshBuyPrice" style="margin:10px auto;display:block;">刷新金價</button>
-
-  <label>景輝收金價 (HKD / 台兩):</label>
-  <input id="chingfaiBuyPrice" type="number" min="0" step="0.01" placeholder="輸入本地收金價" />
-
-  <label>重量 (1/1000 香港台兩):</label>
-  <input id="buyWeight" type="number" min="0" step="any" placeholder="輸入重量" />
-
-  <label>純度選擇:</label>
-  <div class="inline-flex purity-options">
-    <label><input type="radio" name="buyPurity" value="100" checked />100%</label>
-    <label><input type="radio" name="buyPurity" value="75" />75%</label>
-    <label><input type="radio" name="buyPurity" value="custom" />自訂</label>
+  <div id="homepage">
+    <button id="btnBuyIn">買入計算器</button>
+    <button id="btnSellOut">賣出計算器</button>
   </div>
-  <input id="buyPurityCustom" type="number" min="0" max="100" step="0.01" placeholder="自訂純度 (%)" style="display:none;" />
 
-  <label>客戶要求收貨價 (HKD):</label>
-  <input id="requestedBuyPrice" type="number" min="0" step="any" placeholder="可留空以使用計算結果" />
+  <div id="buyInCalc" class="hidden">
+    <h2>買入計算器</h2>
 
-  <div class="result" id="buyResult"></div>
-  <button id="resetBuy" type="button" class="main-btn">重置買入計算</button>
-</section>
+    <div>
+      <label>即時金價 (HKD/兩): 
+        <span id="buyInLivePrice">讀取中...</span>
+        <span id="buyInRefresh" class="price-refresh">重新整理</span>
+      </label>
+      <div class="checkbox-group" style="margin-top: 6px;">
+        <label><input type="checkbox" id="premium500" /> 從即時金價扣HK$500</label>
+        <label><input type="checkbox" id="premium1000" /> 從即時金價扣HK$1000</label>
+      </div>
+    </div>
 
-<section id="sellSection">
-  <label>實時黃金價格 (HKD / 台兩):</label>
-  <input id="sellGoldPrice" type="number" placeholder="載入中，無法獲取金價時可手動輸入" />
-  <button id="refreshSellPrice" style="margin:10px auto;display:block;">刷新金價</button>
+    <label for="dailyPriceBuyIn">每日景輝金價 (HKD/兩):</label>
+    <input type="tel" inputmode="decimal" id="dailyPriceBuyIn" />
 
-  <label>景輝賣金價 (HKD / 台兩):</label>
-  <input id="chingfaiSellPrice" type="number" min="0" step="0.01" placeholder="輸入本地賣金價" />
+    <label for="weightBuyIn">重量 (毫兩):</label>
+    <input type="tel" inputmode="numeric" id="weightBuyIn" placeholder="請輸入毫兩 (1000毫兩=1兩)" />
 
-  <label>重量 (1/1000 香港台兩):</label>
-  <input id="sellWeight" type="number" min="0" step="any" placeholder="輸入重量" />
+    <label for="discountBuyIn">折扣 (%) (例如輸入94等於0.94倍):</label>
+    <input type="tel" inputmode="decimal" id="discountBuyIn" placeholder="預設為100表示無折扣" />
 
-  <label>純度選擇:</label>
-  <div class="inline-flex purity-options">
-    <label><input type="radio" name="sellPurity" value="100" checked />100%</label>
-    <label><input type="radio" name="sellPurity" value="75" />75%</label>
-    <label><input type="radio" name="sellPurity" value="custom" />自訂</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="commissionBuyIn" checked /> 扣除2%佣金（買入用）</label>
+    </div>
+
+    <div>
+      <label>金子純度 (%):</label>
+      <label><input type="radio" name="purityBuyIn" value="100" checked /> 100%</label>
+      <label><input type="radio" name="purityBuyIn" value="75" /> 75%</label>
+      <label>
+        <input type="radio" name="purityBuyIn" value="custom" /> 自訂純度:
+        <input type="tel" inputmode="numeric" id="customPurityBuyIn" min="0" max="100" disabled placeholder="0 ~ 100" />
+      </label>
+    </div>
+
+    <label for="counterofferBuyIn">客戶還價 (HKD):</label>
+    <input type="tel" inputmode="decimal" id="counterofferBuyIn" placeholder="輸入客戶還價計算利潤" />
+
+    <button id="calcBuyIn">計算</button>
+    <button id="resetBuyIn" style="background-color:#6c757d; margin-top: 5px;">重設</button>
+    <div id="marginBuyIn" class="margin-display"></div>
+
+    <div class="result" id="resultBuyIn"></div>
+    <button id="backFromBuyIn" style="background-color:#5bc0de; margin-top: 20px;">返回主頁</button>
   </div>
-  <input id="sellPurityCustom" type="number" min="0" max="100" step="0.01" placeholder="自訂純度 (%)" style="display:none;" />
 
-  <label>人工費 (HKD):</label>
-  <input id="labourCost" type="number" min="0" step="any" placeholder="輸入人工費用" />
+  <div id="sellOutCalc" class="hidden">
+    <h2>賣出計算器</h2>
 
-  <label class="inline-flex"><input id="commissionSell" type="checkbox" checked /> 加入2%佣金</label>
+    <div>
+      <label>即時金價 (HKD/兩): 
+        <span id="sellOutLivePrice">讀取中...</span>
+        <span id="sellOutRefresh" class="price-refresh">重新整理</span>
+      </label>
+    </div>
 
-  <label>售價 (HKD):</label>
-  <input id="userSellingPrice" type="number" min="0" step="any" placeholder="可修改以模擬利潤" />
+    <label for="dailyPriceSellOut">每日景輝金價 (HKD/兩) <span style="font-weight:normal; font-size:0.85rem; color:#666;">(若用客戶還價直接計利潤可留空)</span>:</label>
+    <input type="tel" inputmode="decimal" id="dailyPriceSellOut" />
 
-  <label>計算賣出價:</label>
-  <div id="calculatedSellPrice" class="display-field">尚未計算</div>
+    <label for="weightSellOut">重量 (毫兩):</label>
+    <input type="tel" inputmode="numeric" id="weightSellOut" placeholder="請輸入毫兩 (1000毫兩=1兩)" />
 
-  <label class="inline-flex"><input id="creditCardFee" type="checkbox" /> 承擔信用卡費用(3%)
-    <span id="creditCardFeeAmount" style="margin-left: 10px; font-weight: normal; font-size: 0.9em; color: #555;"></span>
-  </label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="commissionSellOut" checked /> 加2%佣金（賣出用）</label>
+    </div>
 
-  <div class="result" id="sellResult"></div>
-  <button id="resetSell" type="button" class="main-btn">重置賣出計算</button>
-</section>
+    <label for="labourCost">人工成本 (HKD) <span style="font-weight:normal; font-size:0.85rem; color:#666;">(可不輸入)</span>:</label>
+    <input type="tel" inputmode="decimal" id="labourCost" placeholder="0" />
 
-<script>
-(() => {
-  // Cache all needed DOM elements
-  const buyBtn = document.getElementById('btnBuy');
-  const sellBtn = document.getElementById('btnSell');
-  const buySection = document.getElementById('buySection');
-  const sellSection = document.getElementById('sellSection');
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="creditCardFee" /> 信用卡付款（店鋪吸收3%手續費）</label>
+    </div>
 
-  const buyGoldPrice = document.getElementById('buyGoldPrice');
-  const chingfaiBuyPrice = document.getElementById('chingfaiBuyPrice');
-  const buyWeight = document.getElementById('buyWeight');
-  const buyPurityRadios = document.getElementsByName('buyPurity');
-  const buyPurityCustom = document.getElementById('buyPurityCustom');
-  const requestedBuyPrice = document.getElementById('requestedBuyPrice');
-  const buyResult = document.getElementById('buyResult');
-  const resetBuy = document.getElementById('resetBuy');
-  const refreshBuyPrice = document.getElementById('refreshBuyPrice');
+    <div>
+      <label>金子純度 (%):</label>
+      <label><input type="radio" name="puritySellOut" value="100" checked /> 100%</label>
+      <label><input type="radio" name="puritySellOut" value="75" /> 75%</label>
+      <label>
+        <input type="radio" name="puritySellOut" value="custom" /> 自訂純度:
+        <input type="tel" inputmode="numeric" id="customPuritySellOut" min="0" max="100" disabled placeholder="0 ~ 100" />
+      </label>
+    </div>
 
-  const sellGoldPrice = document.getElementById('sellGoldPrice');
-  const chingfaiSellPrice = document.getElementById('chingfaiSellPrice');
-  const sellWeight = document.getElementById('sellWeight');
-  const sellPurityRadios = document.getElementsByName('sellPurity');
-  const sellPurityCustom = document.getElementById('sellPurityCustom');
-  const labourCost = document.getElementById('labourCost');
-  const commissionSell = document.getElementById('commissionSell');
-  const userSellingPrice = document.getElementById('userSellingPrice');
-  const calculatedSellPrice = document.getElementById('calculatedSellPrice');
-  const creditCardFee = document.getElementById('creditCardFee');
-  const creditCardFeeAmount = document.getElementById('creditCardFeeAmount');
-  const sellResult = document.getElementById('sellResult');
-  const resetSell = document.getElementById('resetSell');
-  const refreshSellPrice = document.getElementById('refreshSellPrice');
+    <label for="counterofferSellOut">客戶還價 (HKD):</label>
+    <input type="tel" inputmode="decimal" id="counterofferSellOut" placeholder="輸入客戶還價計算利潤" />
 
-  const gramsPerHKTael = 37.429;
-  const gramsPerTroyOz = 31.1035;
+    <button id="calcSellOut">計算</button>
+    <button id="resetSellOut" style="background-color:#6c757d; margin-top: 5px;">重設</button>
+    <div id="marginSellOut" class="margin-display"></div>
 
-  const API_KEY = 'b59eca630c98a8dbc001ff5d576db229';
-  const API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${API_KEY}&base=USD&currencies=XAU,HKD`;
+    <div class="result" id="resultSellOut"></div>
+    <button id="backFromSellOut" style="background-color:#5bc0de; margin-top: 20px;">返回主頁</button>
+  </div>
 
-  function showSection(section) {
-    if(section === 'buy') {
-      buySection.style.display = 'block';
-      sellSection.style.display = 'none';
-    } else {
-      buySection.style.display = 'none';
-      sellSection.style.display = 'block';
-    }
-  }
+  <script>
+    // 元素宣告（搬到最上方確保點擊事件安全引用）
+    const homepage = document.getElementById('homepage');
+    const buyInCalc = document.getElementById('buyInCalc');
+    const sellOutCalc = document.getElementById('sellOutCalc');
+    const buyInLivePrice = document.getElementById('buyInLivePrice');
+    const buyInRefresh = document.getElementById('buyInRefresh');
+    const sellOutLivePrice = document.getElementById('sellOutLivePrice');
+    const sellOutRefresh = document.getElementById('sellOutRefresh');
 
-  buyBtn.onclick = () => showSection('buy');
-  sellBtn.onclick = () => showSection('sell');
+    function showElement(el) { el.classList.remove('hidden'); }
+    function hideElement(el) { el.classList.add('hidden'); }
 
-  // Utilities to get purity value for both calculators
-  function getSelectedPurity(radioNodeList, customInput) {
-    for(const radio of radioNodeList){
-      if(radio.checked){
-        if(radio.value === 'custom'){
-          const val = parseFloat(customInput.value);
-          return isNaN(val) ? 0 : val;
-        }
-        return parseFloat(radio.value);
+    document.getElementById('btnBuyIn').onclick = () => {
+      hideElement(homepage);
+      showElement(buyInCalc);
+      if (buyInLivePrice.textContent === '讀取中...') fetchLivePrice('buyIn');
+    };
+    document.getElementById('btnSellOut').onclick = () => {
+      hideElement(homepage);
+      showElement(sellOutCalc);
+      if (sellOutLivePrice.textContent === '讀取中...') fetchLivePrice('sellOut');
+    };
+
+    document.getElementById('backFromBuyIn').onclick = () => {
+      hideElement(buyInCalc);
+      showElement(homepage);
+    };
+    document.getElementById('backFromSellOut').onclick = () => {
+      hideElement(sellOutCalc);
+      showElement(homepage);
+    };
+
+    let liveGoldPriceHKD = null;
+    const METALPRICE_API_KEY = 'b59eca630c98a8dbc001ff5d576db229';
+    const USD_TO_HKD = 7.78;
+    const TROY_OUNCE_TO_TAEL_RATIO = 31.1035 / 37.429;
+
+    async function fetchLiveGoldPrice() {
+      const url = `https://api.metalpriceapi.com/v1/latest?api_key=${METALPRICE_API_KEY}&base=USD&currencies=XAU`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('讀取金價失敗');
+        const data = await response.json();
+        if (!data.success || !data.rates || !data.rates.XAU) throw new Error('資料錯誤');
+
+        const USDPerOunce = 1 / data.rates.XAU;
+        const USDPerTael = USDPerOunce / TROY_OUNCE_TO_TAEL_RATIO;
+        const HKDPerTael = USDPerTael * USD_TO_HKD;
+
+        liveGoldPriceHKD = HKDPerTael;
+        return HKDPerTael;
+      } catch (error) {
+        console.error(error);
+        liveGoldPriceHKD = null;
+        return null;
       }
     }
-    return 0;
-  }
 
-  function calculatePureWeight(weightInput, purity) {
-    const weightThousand = parseFloat(weightInput.value);
-    if(isNaN(weightThousand) || purity <= 0) return 0;
-    const weightTael = weightThousand / 1000;
-    return weightTael * (purity / 100);
-  }
-
-  // Buy calculator function
-  function calculateBuy() {
-    if(!buyGoldPrice.value || chingfaiBuyPrice.value === '') {
-      buyResult.textContent = '請輸入所有必要數據';
-      return;
-    }
-    const purity = getSelectedPurity(buyPurityRadios, buyPurityCustom);
-    const pureWeight = calculatePureWeight(buyWeight, purity);
-    const chingfaiPrice = parseFloat(chingfaiBuyPrice.value) || 0;
-    const commissionMultiplier = 0.98;// 2% commission deducted
-    const estimatedBuyPrice = chingfaiPrice * pureWeight * commissionMultiplier;
-    let requestedPrice = parseFloat(requestedBuyPrice.value);
-    if (isNaN(requestedPrice)) requestedPrice = estimatedBuyPrice;
-
-    const profit = estimatedBuyPrice - requestedPrice;
-
-    buyResult.innerHTML = `
-      純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
-      實估買入價（扣佣後）: 港幣 ${estimatedBuyPrice.toFixed(2)}<br/>
-      客戶要求收貨價: 港幣 ${requestedPrice.toFixed(2)}<br/>
-      利潤: <span style="color:${profit >=0 ? 'green':'red'}">港幣 ${profit.toFixed(2)} ${profit >=0 ? '✅' : '❌'}</span>
-    `;
-  }
-
-  // Sell calculator function
-  function calculateSell(){
-    if(!sellGoldPrice.value || chingfaiSellPrice.value === ''){
-      sellResult.textContent = '請輸入所有必要數據';
-      return;
-    }
-    const purity = getSelectedPurity(sellPurityRadios, sellPurityCustom);
-    const pureWeight = calculatePureWeight(sellWeight, purity);
-    const chingfaiPrice = parseFloat(chingfaiSellPrice.value) || 0;
-    let basePrice = chingfaiPrice * pureWeight;
-    if(commissionSell.checked) basePrice *= 1.02;
-    const userPrice = parseFloat(userSellingPrice.value);
-    const sellPrice = !isNaN(userPrice) && userPrice > 0 ? userPrice : basePrice;
-    const labour = parseFloat(labourCost.value) || 0;
-    let profit = sellPrice - (pureWeight * parseFloat(sellGoldPrice.value)) - labour;
-    let creditFee = 0;
-    if(creditCardFee.checked){
-      creditFee = sellPrice * 0.03;
-      profit -= creditFee;
-    }
-
-    calculatedSellPrice.textContent = basePrice > 0 ? `計算出的賣出價：HKD ${basePrice.toFixed(2)}` : '尚未計算';
-
-    creditCardFeeAmount.textContent = creditFee > 0 ? `(HKD ${creditFee.toFixed(2)})` : '';
-
-    sellResult.innerHTML = `
-      純金重量: ${pureWeight.toFixed(4)} 香港台兩<br/>
-      理論黃金價值: 港幣 ${(pureWeight * parseFloat(sellGoldPrice.value)).toFixed(2)}<br/>
-      人工費用: 港幣 ${labour.toFixed(2)}<br/>
-      ${creditCardFee.checked ? '承擔信用卡費用 (3%)<br/>' : ''}
-      利潤: <span style="color:${profit >= 0 ? 'green':'red'}">港幣 ${profit.toFixed(2)} ${profit >=0 ? '✅' : '❌'}</span>
-    `;
-  }
-
-  // Reset functions
-  function resetBuy(){
-    chingfaiBuyPrice.value = '';
-    buyWeight.value = '';
-    buyPurityCustom.value = '';
-    requestedBuyPrice.value = '';
-    buyPurityRadios[0].checked = true;
-    buyResult.textContent = '';
-    calculateBuy();
-  }
-
-  function resetSell(){
-    chingfaiSellPrice.value = '';
-    sellWeight.value = '';
-    labourCost.value  = '';
-    sellPurityCustom.value = '';
-    userSellingPrice.value = '';
-    commissionSell.checked = true;
-    creditCardFee.checked = false;
-    sellPurityRadios[0].checked = true;
-    sellResult.textContent = '';
-    calculatedSellPrice.textContent = '尚未計算';
-    creditCardFeeAmount.textContent = '';
-    calculateSell();
-  }
-
-  // Toggle display of custom purity input
-  function setupPurityRadios(radioNodeList, customInput){
-    radioNodeList.forEach(radio => {
-      radio.addEventListener('change', () => {
-        if(radio.value === 'custom'){
-          customInput.style.display = 'block';
-        } else {
-          customInput.style.display = 'none';
-          customInput.value = '';
-        }
-        if(radioNodeList === buyPurityRadios){
-          calculateBuy();
-        } else {
-          calculateSell();
-        }
-      });
-    });
-
-    customInput.addEventListener('input', () => {
-      if(customInput.value === '') return;
-      if(radioNodeList === buyPurityRadios){
-        calculateBuy();
+    async function updateLivePriceElements() {
+      if (liveGoldPriceHKD === null) {
+        buyInLivePrice.textContent = '錯誤';
+        sellOutLivePrice.textContent = '錯誤';
       } else {
-        calculateSell();
+        const displayPrice = liveGoldPriceHKD.toFixed(2);
+        buyInLivePrice.textContent = displayPrice;
+        sellOutLivePrice.textContent = displayPrice;
       }
-    });
-  }
+    }
 
-  // Add listeners for inputs
-  function setupListeners(){
-    [chingfaiBuyPrice, buyWeight, requestedBuyPrice].forEach(input => input.addEventListener('input', calculateBuy));
-    [chingfaiSellPrice, sellWeight, labourCost, userSellingPrice].forEach(input => input.addEventListener('input', calculateSell));
-    commissionSell.addEventListener('change', calculateSell);
-    creditCardFee.addEventListener('change', calculateSell);
+    async function fetchLivePrice(context) {
+      if (liveGoldPriceHKD === null) {
+        if (context === 'buyIn') buyInLivePrice.textContent = '讀取中...';
+        else if (context === 'sellOut') sellOutLivePrice.textContent = '讀取中...';
+        await fetchLiveGoldPrice();
+        await updateLivePriceElements();
+      }
+    }
 
-    refreshBuyPrice.addEventListener('click', fetchGoldPrice);
-    refreshSellPrice.addEventListener('click', fetchGoldPrice);
+    buyInRefresh.onclick = () => { liveGoldPriceHKD = null; fetchLivePrice('buyIn'); };
+    sellOutRefresh.onclick = () => { liveGoldPriceHKD = null; fetchLivePrice('sellOut'); };
 
-    resetBuy.addEventListener('click', resetBuy);
-    resetSell.addEventListener('click', resetSell);
+    // 買入溢價互斥
+    const premium500 = document.getElementById('premium500');
+    const premium1000 = document.getElementById('premium1000');
+    premium500.onclick = () => { if (premium500.checked) premium1000.checked = false; };
+    premium1000.onclick = () => { if (premium1000.checked) premium500.checked = false; };
 
-    buyPurityRadios.forEach(radio => radio.addEventListener('change', calculateBuy));
-    sellPurityRadios.forEach(radio => radio.addEventListener('change', calculateSell));
-
-    setupPurityRadios(buyPurityRadios, buyPurityCustom);
-    setupPurityRadios(sellPurityRadios, sellPurityCustom);
-  }
-
-  function fetchGoldPrice(){
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => {
-        if(data.success && data.rates && 'XAU' in data.rates && 'HKD' in data.rates){
-          const goldUSD = data.rates.XAU;
-          const usdToHkd = data.rates.HKD;
-          // convert to HKD per tael
-          const goldHKD = goldUSD * usdToHkd;
-          const goldTael = goldHKD * (gramsPerHKTael / gramsPerTroyOz);
-          buyGoldPrice.value = goldTael.toFixed(2);
-          sellGoldPrice.value = goldTael.toFixed(2);
-          buyGoldPrice.readOnly = true;
-          sellGoldPrice.readOnly = true;
-          calculateBuy();
-          calculateSell();
-        } else {
-          buyGoldPrice.value = '';
-          sellGoldPrice.value = '';
-          buyGoldPrice.readOnly = false;
-          sellGoldPrice.readOnly = false;
-          alert('未能自動獲取金價，請手動輸入');
-        }
-      })
-      .catch(err => {
-        buyGoldPrice.value = '';
-        buyGoldPrice.readOnly = false;
-        sellGoldPrice.value = '';
-        sellGoldPrice.readOnly = false;
-        alert('獲取金價時發生錯誤，請手動輸入');
+    // 純度自訂啟用邏輯
+    const purityRadiosBuyIn = document.getElementsByName('purityBuyIn');
+    const customPurityBuyIn = document.getElementById('customPurityBuyIn');
+    purityRadiosBuyIn.forEach(radio => {
+      radio.addEventListener('change', () => {
+        customPurityBuyIn.disabled = radio.value !== 'custom';
+        if (customPurityBuyIn.disabled) customPurityBuyIn.value = '';
       });
-  }
+    });
 
-  // Initialize page
-  showSection('buy');
-  setupListeners();
-  fetchGoldPrice();
-})();
-</script>
+    const purityRadiosSellOut = document.getElementsByName('puritySellOut');
+    const customPuritySellOut = document.getElementById('customPuritySellOut');
+    purityRadiosSellOut.forEach(radio => {
+      radio.addEventListener('change', () => {
+        customPuritySellOut.disabled = radio.value !== 'custom';
+        if (customPuritySellOut.disabled) customPuritySellOut.value = '';
+      });
+    });
 
+    // ==========================================
+    // 買入計算邏輯
+    // ==========================================
+    document.getElementById('calcBuyIn').onclick = () => {
+      const dailyPrice = parseFloat(document.getElementById('dailyPriceBuyIn').value);
+      const weight_milliTael = parseFloat(document.getElementById('weightBuyIn').value);
+      const discountInput = parseFloat(document.getElementById('discountBuyIn').value);
+      const commission = document.getElementById('commissionBuyIn').checked;
+      const counterOfferInput = parseFloat(document.getElementById('counterofferBuyIn').value);
+
+      if (isNaN(dailyPrice) || isNaN(weight_milliTael) || weight_milliTael <= 0 || dailyPrice <= 0) {
+        alert('請輸入有效的每日金價和重量。');
+        return;
+      }
+
+      let purityPercent = 100;
+      purityRadiosBuyIn.forEach(radio => {
+        if (radio.checked) {
+          purityPercent = radio.value === 'custom' ? parseFloat(customPurityBuyIn.value) : parseFloat(radio.value);
+        }
+      });
+      if (isNaN(purityPercent) || purityPercent <= 0 || purityPercent > 100) {
+        alert('請輸入有效的純度（0到100之間）。');
+        return;
+      }
+
+      if (liveGoldPriceHKD === null) {
+        alert('無法取得即時金價，無法計算利潤');
+        return;
+      }
+
+      let premium = 0;
+      if (premium500.checked) premium = 500;
+      else if (premium1000.checked) premium = 1000;
+
+      const livePriceWithPremium = liveGoldPriceHKD - premium;
+      let basePrice = dailyPrice * (weight_milliTael / 1000) * (purityPercent / 100);
+
+      let discount = 1.0;
+      if (!isNaN(discountInput) && discountInput > 0) {
+        discount = discountInput / 100.0;
+      }
+      basePrice *= discount;
+      if (commission) basePrice *= 0.98;
+
+      const marketPriceTotal = livePriceWithPremium * (weight_milliTael / 1000) * (purityPercent / 100);
+
+      let profitBuyIn = 0;
+      let displayOfferPrice = '';
+
+      if (!isNaN(counterOfferInput) && counterOfferInput > 0) {
+        profitBuyIn = marketPriceTotal - counterOfferInput;
+        displayOfferPrice = `\n客戶還價: HKD ${counterOfferInput.toFixed(2)}`;
+      } else {
+        profitBuyIn = marketPriceTotal - basePrice;
+      }
+
+      let marginPercent = 0;
+      if (basePrice !== 0) {
+        marginPercent = (profitBuyIn / basePrice) * 100;
+      }
+      document.getElementById('marginBuyIn').textContent = `利潤率: ${marginPercent.toFixed(2)}%`;
+
+      const profitColor = profitBuyIn >= 0 ? 'green' : '#d9534f';
+      document.getElementById('resultBuyIn').innerHTML =
+        `<div style="font-size:0.9rem; color:black;">買入價格（含佣金及折扣）: HKD ${Math.ceil(basePrice)}<br>` +
+        `即時市場價格（扣除溢價）: HKD ${Math.ceil(marketPriceTotal)}${displayOfferPrice}</div>` +
+        `<div style="font-size:1.2rem; font-weight:bold; color:${profitColor}; margin-top:6px;">買入利潤: HKD ${Math.ceil(profitBuyIn)}</div>`;
+    };
+
+    document.getElementById('resetBuyIn').onclick = () => {
+      document.getElementById('dailyPriceBuyIn').value = '';
+      document.getElementById('weightBuyIn').value = '';
+      document.getElementById('discountBuyIn').value = '';
+      document.getElementById('commissionBuyIn').checked = true;
+      premium500.checked = false;
+      premium1000.checked = false;
+      purityRadiosBuyIn[0].checked = true;
+      customPurityBuyIn.value = '';
+      customPurityBuyIn.disabled = true;
+      document.getElementById('counterofferBuyIn').value = '';
+      document.getElementById('resultBuyIn').textContent = '';
+      document.getElementById('marginBuyIn').textContent = '';
+    };
+
+
+    // ==========================================
+    // 賣出計算邏輯 (已全面優化)
+    // ==========================================
+    document.getElementById('calcSellOut').onclick = () => {
+      const dailyPriceInput = document.getElementById('dailyPriceSellOut').value.trim();
+      const weight_milliTael = parseFloat(document.getElementById('weightSellOut').value);
+      const commission = document.getElementById('commissionSellOut').checked;
+      const labourCost = parseFloat(document.getElementById('labourCost').value) || 0; // 預設為0，可不填
+      const creditCard = document.getElementById('creditCardFee').checked;
+      const counterOfferInput = parseFloat(document.getElementById('counterofferSellOut').value);
+
+      // 基本重量檢查
+      if (isNaN(weight_milliTael) || weight_milliTael <= 0) {
+        alert('請輸入有效的重量。');
+        return;
+      }
+
+      // API金價檢查
+      if (liveGoldPriceHKD === null) {
+        alert('無法取得即時金價，無法計算利潤。');
+        return;
+      }
+
+      // 取得純度
+      let purityPercent = 100;
+      purityRadiosSellOut.forEach(radio => {
+        if (radio.checked) {
+          purityPercent = radio.value === 'custom' ? parseFloat(customPuritySellOut.value) : parseFloat(radio.value);
+        }
+      });
+      if (isNaN(purityPercent) || purityPercent <= 0 || purityPercent > 100) {
+        alert('請輸入有效的純度（0到100之間）。');
+        return;
+      }
+
+      // 計算即時市場成本價
+      const marketPriceTotalSell = liveGoldPriceHKD * (weight_milliTael / 1000) * (purityPercent / 100);
+
+      let basePrice = 0;
+      let profitSellOut = 0;
+      let displayOfferPrice = '';
+      let isDirectCounterOfferMode = false;
+
+      // 判斷是否為：免景輝金價，直接由客戶還價推算利潤模式
+      if (dailyPriceInput === "") {
+        if (isNaN(counterOfferInput) || counterOfferInput <= 0) {
+          alert('若不輸入每日景輝金價，則必須輸入有效的「客戶還價」來直接計算利潤。');
+          return;
+        }
+        isDirectCounterOfferMode = true;
+        basePrice = counterOfferInput; // 最終交易價就是客戶還價
+        profitSellOut = counterOfferInput - marketPriceTotalSell - labourCost; // 還價 - 市場金價成本 - 人工成本
+        displayOfferPrice = `\n客戶還價直接計算模式`;
+      } else {
+        // 正常模式：有輸入景輝金價
+        const dailyPrice = parseFloat(dailyPriceInput);
+        if (isNaN(dailyPrice) || dailyPrice <= 0) {
+          alert('請輸入有效的每日景輝金價。');
+          return;
+        }
+
+        // 店鋪標準賣出報價計算
+        basePrice = dailyPrice * (weight_milliTael / 1000) * (purityPercent / 100);
+        if (commission) basePrice *= 1.02;
+        basePrice += labourCost; // 人工費加進報價中
+
+        if (!isNaN(counterOfferInput) && counterOfferInput > 0) {
+          // 有還價：利潤 = 還價 - 市場金價成本 - 人工成本
+          profitSellOut = counterOfferInput - marketPriceTotalSell - labourCost;
+          displayOfferPrice = `\n客戶還價: HKD ${counterOfferInput.toFixed(2)}`;
+          // 刷卡手續費改以「實際成交的還價」為基數扣除成本
+          if (creditCard) {
+            const creditCardFee = counterOfferInput * 0.03;
+            profitSellOut -= creditCardFee;
+          }
+        } else {
+          // 無還價：利潤 = 標準報價 - 市場金價成本 - 人工成本
+          profitSellOut = basePrice - marketPriceTotalSell - labourCost;
+          if (creditCard) {
+            const creditCardFee = basePrice * 0.03;
+            profitSellOut -= creditCardFee;
+          }
+        }
+      }
+
+      // 在直接還價模式下，如果勾選信用卡，手續費成本同樣扣除
+      if (isDirectCounterOfferMode && creditCard) {
+        const creditCardFee = counterOfferInput * 0.03;
+        profitSellOut -= creditCardFee;
+      }
+
+      // 計算賣出利潤率 (利潤 / 市場金價成本 * 100%)
+      let marginPercent = 0;
+      if (marketPriceTotalSell > 0) {
+        marginPercent = (profitSellOut / marketPriceTotalSell) * 100;
+      }
+      document.getElementById('marginSellOut').textContent = `賣出利潤率: ${marginPercent.toFixed(2)}%`;
+
+      const profitColorSell = profitSellOut >= 0 ? 'green' : '#d9534f';
+
+      if (isDirectCounterOfferMode) {
+        document.getElementById('resultSellOut').innerHTML =
+          `<div style="font-size:0.9rem; color:black;">客戶成交價: HKD ${Math.ceil(basePrice)}<br>` +
+          `即時市場成本價: HKD ${Math.ceil(marketPriceTotalSell)} (人工成本: HKD ${labourCost})<br>` +
+          `<span style="color:#666;">${displayOfferPrice}</span></div>` +
+          `<div style="font-size:1.2rem; font-weight:bold; color:${profitColorSell}; margin-top:6px;">賣出利潤 (已扣除成本及手續費): HKD ${Math.ceil(profitSellOut)}</div>`;
+      } else {
+        document.getElementById('resultSellOut').innerHTML =
+          `<div style="font-size:0.9rem; color:black;">店鋪標準賣出價 (含佣及人工): HKD ${Math.ceil(basePrice)}<br>` +
+          `即時市場成本價: HKD ${Math.ceil(marketPriceTotalSell)}${displayOfferPrice}</div>` +
+          `<div style="font-size:1.2rem; font-weight:bold; color:${profitColorSell}; margin-top:6px;">賣出利潤 (已扣除成本及手續費): HKD ${Math.ceil(profitSellOut)}</div>`;
+      }
+    };
+
+    document.getElementById('resetSellOut').onclick = () => {
+      document.getElementById('dailyPriceSellOut').value = '';
+      document.getElementById('weightSellOut').value = '';
+      document.getElementById('commissionSellOut').checked = true;
+      document.getElementById('labourCost').value = '';
+      document.getElementById('creditCardFee').checked = false;
+      purityRadiosSellOut[0].checked = true;
+      customPuritySellOut.value = '';
+      customPuritySellOut.disabled = true;
+      document.getElementById('counterofferSellOut').value = '';
+      document.getElementById('resultSellOut').textContent = '';
+      document.getElementById('marginSellOut').textContent = '';
+    };
+
+    // 初始化讀取
+    fetchLivePrice('buyIn');
+  </script>
 </body>
 </html>
